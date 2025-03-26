@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum DocumentType {
+    URL
+    FILES
+}
+
+enum IndexStatus {
+    FETCHING
+    FETCH_DONE
+    FETCHING_FAILED
+    INDEXING
+    SUCCESS
+    FAILED
+    SIZE_LIMIT_EXCEED
+}
+
+model Document {
+    id           String         @id @default(cuid())
+    src          String         @db.Text
+    title        String?        @db.Text
+    description  String?        @db.Text
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    documentType DocumentType
+    indexed      Boolean        @default(false)
+    indexStatus  IndexStatus    @default(FETCHING)
+    tokens       Int            @default(0)
+    details      Json?
+    documentData DocumentData[]
+    documentHashes DocumentHashes[]
+}
+
+model DocumentHashes {
+    id          String   @id @default(cuid())
+    documentId  String
+    hash        String
+    document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model DocumentData {
+    id          String   @id @default(cuid())
+    displayName String?
+    documentId  String
+    data        String?  @db.Text
+    size        Int      @default(0)
+    indexed     Boolean  @default(false)
+    document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+    @@unique([documentId])
+}
