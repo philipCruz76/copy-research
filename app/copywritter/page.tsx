@@ -65,18 +65,17 @@ export default function CopywritterPage() {
       });
 
       const result = await res.json();
-      
-     // Create a data URL from the base64 string
-     const imageUrl = `data:image/png;base64,${result.output}`;
-     setCoverImage(imageUrl);
 
+      // Create a data URL from the base64 string
+      const imageUrl = `data:image/png;base64,${result.output}`;
+      setCoverImage(imageUrl);
     } catch (error) {
       console.error("Error generating image:", error);
       toast.error("Failed to generate image. Please try again.");
     } finally {
       setIsGeneratingImage(false);
     }
-  }
+  };
   // Function to copy markdown content to clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(output);
@@ -91,7 +90,7 @@ export default function CopywritterPage() {
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-5/6 mb-3"></div>
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-full mb-3"></div>
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-4/6 mb-6"></div>
-      
+
       <div className="h-4 bg-gray-200 dark:bg-zinc-700 rounded w-2/6 mb-4"></div>
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-full mb-3"></div>
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-5/6 mb-3"></div>
@@ -203,6 +202,10 @@ export default function CopywritterPage() {
               </>
             )}
           </button>
+
+          {/**  Disabled for the time being to save on API costs 
+
+          
           {output.length > 0 ? (<button onClick={()=> {
             handleGenerateImage(output);
           }} className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed min-w-[160px]">
@@ -212,8 +215,8 @@ export default function CopywritterPage() {
             </>
           </button>): null}
           
+         */}
         </div>
-
         {/* Output Section */}
         <div className="mt-8 pb-6">
           <div className="flex items-center justify-between mb-4">
@@ -230,14 +233,14 @@ export default function CopywritterPage() {
               </button>
             )}
           </div>
-          
+
           {/* Cover Image Display */}
           {isGeneratingImage && <ImageSkeletonLoading />}
-          
+
           {coverImage && !isGeneratingImage && (
             <div className="mb-6 rounded-lg w-[500px] h-[500px] mx-auto overflow-hidden border border-gray-200 dark:border-zinc-700">
-              <Image 
-                src={coverImage} 
+              <Image
+                src={coverImage}
                 alt="AI-generated cover image"
                 width={1024}
                 height={512}
@@ -245,7 +248,7 @@ export default function CopywritterPage() {
               />
             </div>
           )}
-          
+
           <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 min-h-[300px] min-w-4xl">
             {isGenerating ? (
               <div className="prose dark:prose-invert prose-sm max-w-none w-full">

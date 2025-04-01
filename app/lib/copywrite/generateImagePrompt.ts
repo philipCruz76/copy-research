@@ -5,8 +5,7 @@ import { generateText } from "ai";
 import { ChatMessage } from "../types/gpt.types";
 
 export async function generateImagePrompt(blogContent: string) {
-
-    const SYSTEM_PROMPT = `You are a professional copywriter. You will be given the contents of a blog post and based on the contents you will generate a prompt to use in image generation. 
+  const SYSTEM_PROMPT = `You are a professional copywriter. You will be given the contents of a blog post and based on the contents you will generate a prompt to use in image generation. 
     Essential Elements of a Strong Prompt
 
     Make sure to include the following elements in the prompt:
@@ -35,20 +34,20 @@ export async function generateImagePrompt(blogContent: string) {
     Basic: A vehicle with a V-16 light device on the roof.
     Detailed: A highly detailed, ultra-realistic close-up of a modern passenger car parked on a busy highway at dusk, equipped with a V-16 luminous signaling device securely mounted on its roof. The device emits a bright, pulsating red and white light, with reflections visible on the glossy car surface and wet asphalt. The background features blurred silhouettes of moving vehicles, captured with a shallow depth of field, creating a sense of motion. The setting sun casts a warm golden glow on the scene, contrasting against the deep blue hues of the evening sky. The image is captured with a cinematic 50mm lens, adding natural bokeh effects and realistic lighting. The mood conveys urgency and safety, highlighting this cutting-edge emergency technology designed to protect drivers in distress.
     `;
-    
-    const USER_PROMPT = `Blog Content: ${blogContent}`;
 
-    const messages: ChatMessage[] = [
-        {role:"system", content:SYSTEM_PROMPT},
-        {role:"user", content:USER_PROMPT}
-    ]
+  const USER_PROMPT = `Blog Content: ${blogContent}`;
 
-    const result = await generateText({
-        model: openai("gpt-4o-mini"),
-        messages,
-        maxTokens: 400,
-        temperature: 0.5,
-    })
+  const messages: ChatMessage[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    { role: "user", content: USER_PROMPT },
+  ];
 
-    return result.text;
+  const result = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages,
+    maxTokens: 400,
+    temperature: 0.5,
+  });
+
+  return result.text;
 }
