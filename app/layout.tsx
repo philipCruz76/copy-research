@@ -33,7 +33,9 @@ export default function RootLayout({
         <ThemeProvider>
           <div className="flex h-screen">
             <Sidebar />
-            <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">{children}</main>
+            <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">
+              {children}
+            </main>
           </div>
           <Toaster />
         </ThemeProvider>

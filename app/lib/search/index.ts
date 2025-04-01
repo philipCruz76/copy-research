@@ -98,10 +98,10 @@ export class SearchClient<T extends SearchProvider> {
             content: item.content,
           })),
         };
-        default:
-            throw new Error(`Unsupported search provider: ${this.config.provider}`);
+      default:
+        throw new Error(`Unsupported search provider: ${this.config.provider}`);
     }
   }
 }
 
-export * from './tavily';
+export * from "./tavily";

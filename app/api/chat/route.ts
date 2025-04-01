@@ -12,7 +12,6 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-
   try {
     let userQuestion = "";
 
@@ -53,7 +52,6 @@ export async function POST(req: Request) {
 
     // If no relevant context was found
     if (!userContext || userContext.trim().length === 0) {
-      
       const response = createDataStreamResponse({
         execute(dataStream) {
           dataStream.writeData({
@@ -67,7 +65,7 @@ export async function POST(req: Request) {
     const result = await streamText({
       model: openai("gpt-4o-mini"),
       temperature: 0.7,
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT(new Date().getFullYear()),
       messages: [
         {
           role: "user",
@@ -76,23 +74,29 @@ export async function POST(req: Request) {
       ],
       tools: {
         search: {
-          description: "Search the web for information not available in the provided context",
+          description:
+            "Search the web for information not available in the provided context",
           parameters: z.object({
-            query: z.string().describe("The search query to find relevant information"),
+            query: z
+              .string()
+              .describe("The search query to find relevant information"),
           }),
           execute: async ({ query }) => {
             const searchResults = await getSearchResults(query);
             // Format search results for the model to use
-            const formattedResults = searchResults.pages.map((page) => 
-              `Source: ${page.title || 'Web Search'}\n${page.content}`
-            ).join("\n\n");
-            
+            const formattedResults = searchResults.pages
+              .map(
+                (page) =>
+                  `Source: ${page.title || "Web Search"}\n${page.content}`,
+              )
+              .join("\n\n");
+
             // Return formatted results with instructions to answer in Portuguese
             return `${formattedResults}\n\nWith this information, please provide a final answer to the user's question in Portuguese.`;
           },
         },
       },
-      toolChoice: 'auto',
+      toolChoice: "auto",
       maxSteps: 2, // Limit to prevent search loops - just one tool use and then final answer
     });
 

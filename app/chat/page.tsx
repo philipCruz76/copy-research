@@ -14,7 +14,7 @@ export default function ChatPage() {
     status,
     stop,
   } = useChat({
-    maxSteps:5,
+    maxSteps: 5,
   });
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white">
@@ -56,13 +56,25 @@ export default function ChatPage() {
                     }`}
                   >
                     {message.parts.map((part, i) => {
-                      switch(part.type) {
-                        case 'text': 
-                          return <div key={`${message.id}-${i}`} className="whitespace-pre-wrap">{part.text}</div>;
-                        case 'tool-invocation': 
-                          return <div key={`${message.id}-${i}`} className="italic text-gray-500 dark:text-gray-400">
-                            Searching for additional information...
-                          </div>;
+                      switch (part.type) {
+                        case "text":
+                          return (
+                            <div
+                              key={`${message.id}-${i}`}
+                              className="whitespace-pre-wrap"
+                            >
+                              {part.text}
+                            </div>
+                          );
+                        case "tool-invocation":
+                          return (
+                            <div
+                              key={`${message.id}-${i}`}
+                              className="italic text-gray-500 dark:text-gray-400"
+                            >
+                              Searching for additional information...
+                            </div>
+                          );
                         default:
                           return null;
                       }
