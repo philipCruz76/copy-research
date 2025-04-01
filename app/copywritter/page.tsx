@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Send, Loader } from "lucide-react";
+import { Copy, Send, Loader, CameraIcon } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 type CopyType = "blog" | "newsletter";
 type Tone = "formal" | "casual";
@@ -11,9 +12,11 @@ type Tone = "formal" | "casual";
 export default function CopywritterPage() {
   const [subject, setSubject] = useState("");
   const [tone, setTone] = useState<Tone>("formal");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
   const [copyType, setCopyType] = useState<CopyType>("blog");
   const [output, setOutput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const handleGenerate = async (
     type: CopyType,
@@ -21,6 +24,7 @@ export default function CopywritterPage() {
     subject: string,
   ) => {
     setIsGenerating(true);
+    setCoverImage(null);
     setOutput(""); // Clear previous output when generating new content
     try {
       let res;
@@ -51,6 +55,28 @@ export default function CopywritterPage() {
     }
   };
 
+  const handleGenerateImage = async (output: string) => {
+    try {
+      setIsGeneratingImage(true);
+      const res = await fetch("/api/copywrite/image-generation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blogContent: output }),
+      });
+
+      const result = await res.json();
+      
+     // Create a data URL from the base64 string
+     const imageUrl = `data:image/png;base64,${result.output}`;
+     setCoverImage(imageUrl);
+
+    } catch (error) {
+      console.error("Error generating image:", error);
+      toast.error("Failed to generate image. Please try again.");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }
   // Function to copy markdown content to clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(output);
@@ -70,6 +96,13 @@ export default function CopywritterPage() {
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-full mb-3"></div>
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-5/6 mb-3"></div>
       <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-full mb-3"></div>
+    </div>
+  );
+
+  // Skeleton loading component for the image
+  const ImageSkeletonLoading = () => (
+    <div className="animate-pulse mb-6">
+      <div className="h-64 bg-gray-200 dark:bg-zinc-700 rounded-lg w-full"></div>
     </div>
   );
 
@@ -143,7 +176,7 @@ export default function CopywritterPage() {
         </div>
 
         {/* Generate Button */}
-        <div>
+        <div className="flex items-start justify-between w-full gap-4">
           <button
             onClick={() => {
               if (subject.trim() === "" || subject.length < 10) {
@@ -170,6 +203,15 @@ export default function CopywritterPage() {
               </>
             )}
           </button>
+          {output.length > 0 ? (<button onClick={()=> {
+            handleGenerateImage(output);
+          }} className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed min-w-[160px]">
+            <>
+            <CameraIcon className="h-4 w-4 mr-2" />
+            Generate Image
+            </>
+          </button>): null}
+          
         </div>
 
         {/* Output Section */}
@@ -188,6 +230,21 @@ export default function CopywritterPage() {
               </button>
             )}
           </div>
+          
+          {/* Cover Image Display */}
+          {isGeneratingImage && <ImageSkeletonLoading />}
+          
+          {coverImage && !isGeneratingImage && (
+            <div className="mb-6 rounded-lg w-[500px] h-[500px] mx-auto overflow-hidden border border-gray-200 dark:border-zinc-700">
+              <Image 
+                src={coverImage} 
+                alt="AI-generated cover image"
+                width={1024}
+                height={512}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
           
           <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 min-h-[300px] min-w-4xl">
             {isGenerating ? (
