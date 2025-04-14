@@ -9,7 +9,45 @@ import {
   ChevronUp,
   Download,
   X,
+  Share,
+  Trash,
+  Edit,
 } from "lucide-react";
+
+// Animation variants
+const contentVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] },
+  },
+  exit: {
+    opacity: 0,
+    y: 20,
+    transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1.0] },
+  },
+};
+
+const buttonVariants = {
+  hover: { scale: 1.05 },
+  tap: { scale: 0.95 },
+};
+
+// Enhanced animations for document content
+const itemAnimations = {
+  initial: { opacity: 0, y: 15 },
+  animate: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.4,
+      ease: [0.25, 0.1, 0.25, 1.0],
+    },
+  }),
+  exit: { opacity: 0, y: 10, transition: { duration: 0.2 } },
+};
 
 type DocumentDataProps = {
   document: any; // Replace with your proper document type
@@ -22,106 +60,449 @@ export default function DocumentDataComponent({
 }: DocumentDataProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const documentContent = document.documentData[0]?.data || "";
+  const [activeTab, setActiveTab] = useState<"content" | "details">("content");
 
   return (
-    <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="overflow-hidden bg-gray-50 dark:bg-zinc-800 rounded-lg mb-4"
-    >
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-white dark:bg-zinc-700 rounded">
-              <FileText className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            </div>
-            <div>
-              <h2 className="font-medium">
-                {document.title || "Untitled Document"}
-              </h2>
-              {document.description && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {document.description}
-                </p>
-              )}
-              <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400">
-                <Calendar className="h-3 w-3 mr-1" />
-                <span>{new Date(document.createdAt).toLocaleDateString()}</span>
-
-                {document.documentType && (
-                  <span className="ml-4 px-2 py-0.5 bg-gray-100 dark:bg-zinc-700 rounded text-xs">
-                    {document.documentType}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {documentContent && (
-              <button
-                className="p-1.5 bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors"
-                onClick={() => {
-                  // Download functionality (would need to be implemented)
-                  const blob = new Blob([documentContent], {
-                    type: "text/plain",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${document.title || "document"}.txt`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
+    <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-zinc-900">
+      {/* Header */}
+      <motion.div
+        className="p-6 border-b border-gray-200 dark:border-zinc-800 flex justify-between"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
+      >
+        <div className="flex items-start gap-3">
+          <motion.div
+            className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              delay: 0.1,
+              duration: 0.3,
+              type: "spring",
+              stiffness: 400,
+            }}
+          >
+            <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          </motion.div>
+          <div>
+            <motion.h2
+              className="text-xl font-bold"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15, duration: 0.3 }}
+            >
+              {document.title || "Untitled Document"}
+            </motion.h2>
+            {document.description && (
+              <motion.p
+                className="text-sm text-gray-500 dark:text-gray-400 mt-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
               >
-                <Download className="h-4 w-4" />
-              </button>
+                {document.description}
+              </motion.p>
             )}
-
-            <button
-              className="p-1.5 bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+            <motion.div
+              className="flex items-center mt-2 text-xs text-gray-500 dark:text-gray-400"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.25, duration: 0.3 }}
             >
-              {isCollapsed ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronUp className="h-4 w-4" />
+              <Calendar className="h-3 w-3 mr-1" />
+              <span>
+                Created: {new Date(document.createdAt).toLocaleDateString()}
+              </span>
+
+              {document.documentType && (
+                <span className="ml-4 px-2 py-0.5 bg-gray-100 dark:bg-zinc-800 rounded text-xs">
+                  {document.documentType}
+                </span>
               )}
-            </button>
-
-            <button
-              className="p-1.5 bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </button>
+            </motion.div>
           </div>
         </div>
 
-        <AnimatePresence>
-          {!isCollapsed && (
+        <motion.div
+          className="flex items-start gap-2"
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
+          <motion.button
+            className="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+            onClick={onClose}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            aria-label="Close document view"
+          >
+            <X className="h-5 w-5" />
+          </motion.button>
+        </motion.div>
+      </motion.div>
+
+      {/* Tabs */}
+      <motion.div
+        className="px-6 pt-4 border-b border-gray-200 dark:border-zinc-800"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.3 }}
+      >
+        <div className="flex gap-4">
+          <button
+            className={`pb-3 px-1 text-sm font-medium transition-colors relative ${
+              activeTab === "content"
+                ? "text-indigo-600 dark:text-indigo-400"
+                : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+            }`}
+            onClick={() => setActiveTab("content")}
+          >
+            Content
+            {activeTab === "content" && (
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+          </button>
+          <button
+            className={`pb-3 px-1 text-sm font-medium transition-colors relative ${
+              activeTab === "details"
+                ? "text-indigo-600 dark:text-indigo-400"
+                : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+            }`}
+            onClick={() => setActiveTab("details")}
+          >
+            Details
+            {activeTab === "details" && (
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+                layoutId="activeTab"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Action buttons */}
+      <motion.div
+        className="px-6 py-3 flex gap-2"
+        initial={{ opacity: 0, y: -5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+      >
+        {documentContent && (
+          <motion.button
+            className="px-3 py-1.5 text-sm rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors"
+            onClick={() => {
+              const blob = new Blob([documentContent], {
+                type: "text/plain",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${document.title || "document"}.txt`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.45, duration: 0.2 }}
+          >
+            <Download className="h-4 w-4" />
+            Download
+          </motion.button>
+        )}
+
+        <motion.button
+          className="px-3 py-1.5 text-sm rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 flex items-center gap-1.5 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, duration: 0.2 }}
+        >
+          <Share className="h-4 w-4" />
+          Share
+        </motion.button>
+
+        <motion.button
+          className="px-3 py-1.5 text-sm rounded-md bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 flex items-center gap-1.5 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.55, duration: 0.2 }}
+        >
+          <Edit className="h-4 w-4" />
+          Edit
+        </motion.button>
+
+        <div className="flex-grow"></div>
+
+        <motion.button
+          className="px-3 py-1.5 text-sm rounded-md text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40 flex items-center gap-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, duration: 0.2 }}
+        >
+          <Trash className="h-4 w-4" />
+          Delete
+        </motion.button>
+      </motion.div>
+
+      {/* Content */}
+      <motion.div
+        className="flex-grow overflow-hidden p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.4 }}
+      >
+        <AnimatePresence mode="wait">
+          {activeTab === "content" ? (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
+              key="content"
+              className="h-full overflow-auto"
+              variants={contentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
             >
               {documentContent ? (
-                <div className="whitespace-pre-wrap font-mono text-sm bg-white dark:bg-zinc-900 p-4 rounded border border-gray-200 dark:border-zinc-700 overflow-auto max-h-[60vh]">
-                  {documentContent}
-                </div>
+                <motion.div
+                  className="w-full h-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.4 }}
+                >
+                  <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
+                    <div className="text-sm font-medium">Document Content</div>
+                    <motion.button
+                      onClick={() => setIsCollapsed(!isCollapsed)}
+                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {isCollapsed ? (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4 text-gray-500" />
+                      )}
+                    </motion.button>
+                  </div>
+                  <AnimatePresence>
+                    {!isCollapsed && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{
+                          height: "auto",
+                          opacity: 1,
+                          transition: {
+                            height: { duration: 0.4 },
+                            opacity: { duration: 0.3, delay: 0.1 },
+                          },
+                        }}
+                        exit={{
+                          height: 0,
+                          opacity: 0,
+                          transition: {
+                            height: { duration: 0.3 },
+                            opacity: { duration: 0.2 },
+                          },
+                        }}
+                        className="overflow-hidden"
+                      >
+                        <div className="whitespace-pre-wrap font-mono text-sm p-4 overflow-auto max-h-[60vh]">
+                          {documentContent}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               ) : (
-                <div className="text-center p-8 text-gray-500 dark:text-gray-400">
-                  No content available for this document.
-                </div>
+                <motion.div
+                  className="flex flex-col items-center justify-center h-full py-12 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.div
+                    className="w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                  >
+                    <FileText className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                  </motion.div>
+                  <motion.h3
+                    className="text-lg font-medium mb-2"
+                    custom={0}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    No content available
+                  </motion.h3>
+                  <motion.p
+                    className="text-gray-500 dark:text-gray-400 max-w-md"
+                    custom={1}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    This document does not have any content stored.
+                  </motion.p>
+                </motion.div>
               )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="details"
+              className="h-full overflow-auto"
+              variants={contentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <motion.div
+                className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-5 mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+              >
+                <h3 className="text-sm font-medium mb-4">
+                  Document Information
+                </h3>
+                <div className="space-y-4">
+                  <motion.div
+                    className="flex flex-col"
+                    custom={0}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Title
+                    </span>
+                    <span className="text-sm mt-1">
+                      {document.title || "Untitled Document"}
+                    </span>
+                  </motion.div>
+
+                  {document.description && (
+                    <motion.div
+                      className="flex flex-col"
+                      custom={1}
+                      variants={itemAnimations}
+                      initial="initial"
+                      animate="animate"
+                    >
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Description
+                      </span>
+                      <span className="text-sm mt-1">
+                        {document.description}
+                      </span>
+                    </motion.div>
+                  )}
+
+                  <motion.div
+                    className="flex flex-col"
+                    custom={2}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Created
+                    </span>
+                    <span className="text-sm mt-1">
+                      {new Date(document.createdAt).toLocaleString()}
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    className="flex flex-col"
+                    custom={3}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Last Updated
+                    </span>
+                    <span className="text-sm mt-1">
+                      {new Date(document.updatedAt).toLocaleString()}
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    className="flex flex-col"
+                    custom={4}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Document Type
+                    </span>
+                    <span className="text-sm mt-1">
+                      {document.documentType || "Unknown"}
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    className="flex flex-col"
+                    custom={5}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Source
+                    </span>
+                    <span className="text-sm mt-1 truncate">
+                      {document.src || "Unknown"}
+                    </span>
+                  </motion.div>
+
+                  <motion.div
+                    className="flex flex-col"
+                    custom={6}
+                    variants={itemAnimations}
+                    initial="initial"
+                    animate="animate"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Index Status
+                    </span>
+                    <span className="text-sm mt-1 flex items-center">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                          document.indexed ? "bg-green-500" : "bg-yellow-500"
+                        }`}
+                      ></span>
+                      {document.indexStatus}
+                    </span>
+                  </motion.div>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
