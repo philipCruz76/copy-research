@@ -8,12 +8,21 @@ import {
   isValidURL,
 } from "../lib/utils";
 import { toast } from "sonner";
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { downloadDocument } from "../lib/storage";
 import {
   checkForDocumentLimit,
   processUrl,
 } from "../lib/actions/document-actions";
+import { useFileUploadModal } from "../lib/stores/file-upload";
+import { useMediaQuery } from "react-responsive";
+
+const FileUploadModalMobile = lazy(
+  () => import("@/app/components/modal/FileUploadModalMobile"),
+);
+const FileUploadModalDesktop = lazy(
+  () => import("@/app/components/modal/FileUploadModalDesktop"),
+);
 const acceptedTypes = [
   "text/plain",
   "application/pdf",
@@ -25,6 +34,8 @@ export default function AddDocumentsPage() {
   const [documentURL, setDocumentURL] = useState<string | null>(null);
   const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [url, setUrl] = useState<string>("");
+  const { setIsOpen } = useFileUploadModal();
+  const isDesktopOrLaptop = useMediaQuery({ minWidth: 900 });
 
   const documentLimitCheck = async () => {
     const response = await checkForDocumentLimit();
@@ -173,7 +184,11 @@ export default function AddDocumentsPage() {
           </p>
           <button
             type="button"
-            onClick={() => document.getElementById("fileUpload")?.click()}
+            onClick={() => {
+              setIsOpen(true);
+              // Previous behavior
+              // document.getElementById("fileUpload")?.click()
+            }}
             className="w-full px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
             Choose Files
@@ -249,6 +264,8 @@ export default function AddDocumentsPage() {
           </div>
         </div>
       </form>
+      {isDesktopOrLaptop && <FileUploadModalDesktop />}
+      {!isDesktopOrLaptop && <FileUploadModalMobile />}
     </div>
   );
 }

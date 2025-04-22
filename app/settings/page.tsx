@@ -55,35 +55,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* API Settings */}
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <Key className="h-5 w-5 mr-2 text-gray-700 dark:text-gray-300" />
-            <h2 className="text-lg font-medium">API Keys</h2>
-          </div>
-
-          <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">API Key</label>
-              <div className="flex">
-                <input
-                  type="password"
-                  value="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-l-md bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
-                />
-                <button className="px-4 py-2 bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 rounded-r-md hover:bg-gray-300 dark:hover:bg-zinc-600 transition-colors">
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <button className="px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
-              Regenerate API Key
-            </button>
-          </div>
-        </div>
-
         {/* Notification Settings */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
@@ -139,16 +110,6 @@ export default function SettingsPage() {
           </div>
 
           <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Export Data</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                Download all your data including chat history and documents
-              </p>
-              <button className="px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
-                Export All Data
-              </button>
-            </div>
-
             <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
               <h3 className="font-medium mb-2 text-red-500">Danger Zone</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">

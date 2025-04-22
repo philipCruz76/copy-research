@@ -8,15 +8,12 @@ import {
   useCallback,
   type Dispatch,
   type SetStateAction,
-  type ChangeEvent,
   memo,
 } from "react";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
-import { Textarea } from "./ui/Textarea";
+import { Textarea } from "../lib/ui/Textarea";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
-
-type SearchMode = "search" | "deepResearch";
 
 interface ChatInputProps {
   input: string;

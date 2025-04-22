@@ -20,7 +20,7 @@ export default function ChatPage() {
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white">
       {/* Chat header - similar to ChatGPT */}
       <header className="flex items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur p-2 mobile:p-4">
-        <h1 className="text-lg font-semibold">Copywriter Tool</h1>
+        <h1 className="text-lg font-semibold">Research Assistant</h1>
         <button
           onClick={() => setMessages([])}
           className="text-xs px-2 py-1 rounded-md border border-black/10 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
@@ -38,7 +38,9 @@ export default function ChatPage() {
                 How can I help you today?
               </h2>
               <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                I'm a copywriter tool that can help you write better copy.
+                I'm a research agent that can help you find information and
+                parse through information either on the web or from your own
+                documents.
               </p>
             </div>
           ) : (

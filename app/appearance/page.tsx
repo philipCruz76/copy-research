@@ -139,51 +139,6 @@ export default function AppearancePage() {
         </div>
 
         <div className="mt-8">
-          <h2 className="text-lg font-medium mb-4">Chat Display</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Show Timestamps</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Display time for each message
-                </p>
-              </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="timestamps"
-                  className="sr-only peer"
-                  checked={showTimestamps}
-                  onChange={(e) => setShowTimestamps(e.target.checked)}
-                />
-                <div className="block h-6 bg-gray-300 dark:bg-zinc-700 rounded-full w-12 peer-checked:bg-blue-600"></div>
-                <div className="absolute left-1 top-1 h-4 w-4 bg-white rounded-full transition-all peer-checked:left-7"></div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Chat Bubbles</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Use bubble style for messages
-                </p>
-              </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="bubbles"
-                  className="sr-only peer"
-                  checked={useBubbles}
-                  onChange={(e) => setUseBubbles(e.target.checked)}
-                />
-                <div className="block h-6 bg-gray-300 dark:bg-zinc-700 rounded-full w-12 peer-checked:bg-blue-600"></div>
-                <div className="absolute left-1 top-1 h-4 w-4 bg-white rounded-full transition-all peer-checked:left-7"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8">
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             onClick={savePreferences}

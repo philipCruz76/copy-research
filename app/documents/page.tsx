@@ -89,7 +89,11 @@ export default function DocumentsPage() {
   );
 
   // Filter documents based on search term
-  const filteredDocuments = documents;
+  const filteredDocuments = documents.filter(
+    (doc) =>
+      doc.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   return (
     <div className="flex h-full bg-white dark:bg-zinc-900 text-black dark:text-white">

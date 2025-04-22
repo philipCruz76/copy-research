@@ -26,6 +26,7 @@ export async function generateBlogPost(
     1. **Do Not Deviate from the Given Information**  
        - The blog post **must strictly adhere** to the subject matter and Use ONLY the provided context to answer
        - You **must not introduce new facts, assumptions, information, make extrapolations, or invented details** that are not explicitly mentioned in the context.  
+       - If there is any content related to research done about the subject, you must include it in the blog post.
 
     2. **Preserve Key Technical Details and Terminology**  
        - If the source material references **specific laws, regulations, or technologies**, these **must be included accurately** in the blog post.  

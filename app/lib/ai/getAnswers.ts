@@ -60,12 +60,39 @@ export async function indexFileDocument(
 export const loadUrlDocument = async (url: string) => {
   try {
     console.log("Loading documents...");
-    const pTagSelector = `p`;
-    const cheerioLoader = new CheerioWebBaseLoader(url, {
-      selector: pTagSelector,
+
+    // First, load the document with Cheerio to extract the title
+    const titleLoader = new CheerioWebBaseLoader(url, {
+      selector: "h1",
     });
-    const docs = await cheerioLoader.load();
-    return docs;
+
+    // Then, load the document to extract paragraphs
+    const contentLoader = new CheerioWebBaseLoader(url, {
+      selector: "p",
+    });
+
+    // Load both parts
+    const [titleDocs, contentDocs] = await Promise.all([
+      titleLoader.load(),
+      contentLoader.load(),
+    ]);
+
+    // Get the title from the first h1 element (if available)
+    const title =
+      titleDocs.length > 0 ? titleDocs[0].pageContent.trim() : "Unknown Title";
+
+    // Create a single document with content as pageContent and title in metadata
+    const processedDoc = new Document({
+      pageContent: contentDocs
+        .map((doc) => doc.pageContent.trim())
+        .join("\n\n"),
+      metadata: {
+        source: url,
+        title: title,
+      },
+    });
+
+    return [processedDoc];
   } catch (error) {
     console.error("Error in URL upload:", error);
     throw new Error("Failed to load document from");

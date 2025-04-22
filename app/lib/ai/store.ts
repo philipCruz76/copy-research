@@ -36,6 +36,7 @@ export const loadDocumentsToDb = async (
     data: {
       src: documentId,
       documentType: DocumentType.URL,
+      title: docs[0].metadata.title,
       id: documentId,
       indexed: true,
       documentData: {
