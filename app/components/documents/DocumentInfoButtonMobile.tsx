@@ -10,17 +10,19 @@ interface DocumentInfoButtonProps {
   document: DocumentWithData;
 }
 
-export default function DocumentInfoButtonMobile({ document }: DocumentInfoButtonProps){
-    const router = useRouter();
-    const { selectedDocumentId, setShowDetail } = useDocumentSelection();
-    
-    const handleDocumentClick = () => {
-      setShowDetail(false);
-      router.push(`/documents/${document.id}`);
-    };
-    
-    return (
-        <div
+export default function DocumentInfoButtonMobile({
+  document,
+}: DocumentInfoButtonProps) {
+  const router = useRouter();
+  const { selectedDocumentId, setShowDetail } = useDocumentSelection();
+
+  const handleDocumentClick = () => {
+    setShowDetail(false);
+    router.push(`/documents/${document.id}`);
+  };
+
+  return (
+    <div
       onClick={handleDocumentClick}
       className={`w-full text-left block p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
         selectedDocumentId === document.id
@@ -80,5 +82,5 @@ export default function DocumentInfoButtonMobile({ document }: DocumentInfoButto
         </div>
       </div>
     </div>
-    )
+  );
 }

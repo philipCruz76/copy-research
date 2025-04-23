@@ -14,4 +14,6 @@ export const DocumentUploadSchema = z.object({
 
 export type DocumentType = z.infer<typeof DocumentUploadSchema>;
 
-export type  DocumentWithData = Document & { documentData: DocumentData["data"] };
+export type DocumentWithData = Document & {
+  documentData: DocumentData["data"];
+};

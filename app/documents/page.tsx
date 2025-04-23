@@ -48,12 +48,24 @@ const containerVariants = {
 
 export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { selectedDocumentId, setSelectedDocumentId, showDetail, setShowDetail } = useDocumentSelection();
-  const isNotDesktop = useMediaQuery({maxWidth: 900});
-  
+  const {
+    selectedDocumentId,
+    setSelectedDocumentId,
+    showDetail,
+    setShowDetail,
+  } = useDocumentSelection();
+  const isNotDesktop = useMediaQuery({ maxWidth: 900 });
+
   // Use SWR for data fetching with caching
-  const fetcher = useCallback((url: string) => fetch(url).then(res => res.json()), []);
-  const { data: documents = [], isLoading, error } = useSWR<DocumentWithData[]>("/api/documents", fetcher, {
+  const fetcher = useCallback(
+    (url: string) => fetch(url).then((res) => res.json()),
+    [],
+  );
+  const {
+    data: documents = [],
+    isLoading,
+    error,
+  } = useSWR<DocumentWithData[]>("/api/documents", fetcher, {
     revalidateOnFocus: false,
     revalidateIfStale: false,
     dedupingInterval: 60000, // 1 minute
@@ -67,7 +79,7 @@ export default function DocumentsPage() {
     }, 300);
   };
 
-  useEffect(()=> {
+  useEffect(() => {
     if (isNotDesktop) {
       setShowDetail(false);
     }
@@ -194,12 +206,12 @@ export default function DocumentsPage() {
                   whileTap={{ scale: 0.99 }}
                 >
                   <>
-                   <div className="flex desktop:hidden">
-                    <DocumentInfoButtonMobile document={document} />
-                   </div>
-                   <div className="hidden desktop:flex">
-                    <DocumentInfoButtonDesktop document={document} />
-                   </div>
+                    <div className="flex desktop:hidden">
+                      <DocumentInfoButtonMobile document={document} />
+                    </div>
+                    <div className="hidden desktop:flex">
+                      <DocumentInfoButtonDesktop document={document} />
+                    </div>
                   </>
                 </motion.div>
               ))}

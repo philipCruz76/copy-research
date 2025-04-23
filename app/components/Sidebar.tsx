@@ -142,24 +142,24 @@ export function Sidebar({ className }: SidebarProps) {
         setIsMobileMenuOpen(false);
       }
     };
-    
-    window.addEventListener('popstate', handleRouteChange);
-    
+
+    window.addEventListener("popstate", handleRouteChange);
+
     return () => {
-      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener("popstate", handleRouteChange);
     };
   }, [isMobile, isMobileMenuOpen]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
-    
+
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isMobileMenuOpen]);
 
@@ -288,7 +288,7 @@ export function Sidebar({ className }: SidebarProps) {
 
               <NavItem
                 href="/copywritter"
-                icon="/icons/clock.svg"
+                icon="/icons/paintbrush.svg"
                 text="Copywritter"
                 isCollapsed={false}
                 index={3}
@@ -301,10 +301,10 @@ export function Sidebar({ className }: SidebarProps) {
                 isCollapsed={false}
                 index={4}
               />
-              
+
               <NavItem
                 href="/appearance"
-                icon="/icons/paintbrush.svg"
+                icon="/icons/canvas.svg"
                 text="Appearance"
                 isCollapsed={false}
                 index={5}
@@ -444,7 +444,7 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed}
             index={4}
           />
-          
+
           <NavItem
             href="/appearance"
             icon="/icons/paintbrush.svg"

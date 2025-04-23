@@ -11,7 +11,7 @@ export async function getDocumentById(documentId: string) {
       },
       include: {
         documentData: true,
-      }
+      },
     });
 
     if (!document || !document.documentData) {
@@ -19,9 +19,9 @@ export async function getDocumentById(documentId: string) {
     }
 
     const documentWithData = {
-        ...document,
-        documentData: document["documentData"][0].data,
-    }
+      ...document,
+      documentData: document["documentData"][0].data,
+    };
 
     return documentWithData;
   } catch (error) {

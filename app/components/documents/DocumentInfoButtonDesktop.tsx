@@ -9,7 +9,9 @@ interface DocumentInfoButtonProps {
   document: DocumentWithData;
 }
 
-export default function DocumentInfoButtonDesktop({ document }: DocumentInfoButtonProps) {
+export default function DocumentInfoButtonDesktop({
+  document,
+}: DocumentInfoButtonProps) {
   const {
     selectedDocumentId,
     setSelectedDocumentId,

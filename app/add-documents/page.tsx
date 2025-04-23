@@ -30,7 +30,7 @@ export default function AddDocumentsPage() {
   const handleURLUpload = async (url: string) => {
     try {
       setIsUrlLoading(true);
-      
+
       // Start loading toast with promise
       const toastPromise = toast.promise(
         (async () => {
@@ -46,21 +46,22 @@ export default function AddDocumentsPage() {
           if (!response.success) {
             throw new Error(response.message);
           }
-          
+
           setUrl(""); // Clear the input field after successful upload
-          
+
           // Check if we're now at the limit after this upload
           await checkLimit();
-          
+
           return response;
         })(),
         {
-          loading: 'Processing URL...',
-          success: (data) => data.message || 'URL processed successfully!',
-          error: (err) => err.message || 'An error occurred while processing the URL'
-        }
+          loading: "Processing URL...",
+          success: (data) => data.message || "URL processed successfully!",
+          error: (err) =>
+            err.message || "An error occurred while processing the URL",
+        },
       );
-      
+
       await toastPromise; // Wait for the promise to resolve or reject
     } catch (error) {
       // Additional error handling if needed
@@ -76,7 +77,7 @@ export default function AddDocumentsPage() {
       toast.error("Failed to check document limits");
     }
   };
-  
+
   const checkLimit = async () => {
     const response = await checkForDocumentLimit();
     if (!response.success) {
@@ -101,7 +102,7 @@ export default function AddDocumentsPage() {
           Upload documents or add web URLs to train your AI assistant
         </p>
       </header>
-      
+
       {limitReached && (
         <div className="mb-6 p-4 border border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
           <AlertCircle className="h-5 w-5" />
@@ -124,9 +125,9 @@ export default function AddDocumentsPage() {
             onClick={handleFileUploadClick}
             disabled={isUrlLoading || limitReached}
             className={`w-full px-4 py-2 rounded-md transition-colors flex items-center justify-center ${
-              isUrlLoading || limitReached 
-              ? "bg-gray-300 dark:bg-zinc-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" 
-              : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+              isUrlLoading || limitReached
+                ? "bg-gray-300 dark:bg-zinc-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
             }`}
           >
             {isUrlLoading ? (
