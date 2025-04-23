@@ -51,7 +51,7 @@ const itemAnimations = {
 
 type DocumentDataProps = {
   document: any; // Replace with your proper document type
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 export default function DocumentDataComponent({
@@ -124,23 +124,25 @@ export default function DocumentDataComponent({
           </div>
         </div>
 
-        <motion.div
-          className="flex items-start gap-2"
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-        >
-          <motion.button
-            className="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-            onClick={onClose}
-            variants={buttonVariants}
-            whileHover="hover"
-            whileTap="tap"
-            aria-label="Close document view"
+        {onClose && (
+          <motion.div
+            className="flex items-start gap-2"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
           >
-            <X className="h-5 w-5" />
-          </motion.button>
-        </motion.div>
+            <motion.button
+              className="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+              onClick={onClose}
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+              aria-label="Close document view"
+            >
+              <X className="h-5 w-5" />
+            </motion.button>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Tabs */}

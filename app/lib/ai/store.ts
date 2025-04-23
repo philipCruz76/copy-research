@@ -4,7 +4,7 @@ import { DocumentType } from "@prisma/client";
 import { Document } from "@langchain/core/documents";
 import { embeddings } from "./gpt";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { generateDocumentHash } from "../utils";
+import { generateDocumentHash, generateRandomFileName } from "../utils";
 import db from "@/app/lib/db";
 
 export const getVectorStore = () => {
@@ -18,26 +18,27 @@ export const getVectorStore = () => {
 };
 
 export const loadDocumentsToDb = async (
-  documentId: string,
+  src: string,
   docType: DocumentType,
   docs: Array<Document>,
 ) => {
   console.log("Loading documents to db...");
+  const documentId = await generateRandomFileName();
 
   const documents = docs.map(
     (doc) =>
       new Document({
         pageContent: doc.pageContent,
-        metadata: { ...doc.metadata, documentId, type: docType },
+        metadata: { ...doc.metadata, documentId, src, type: docType },
       }),
   );
 
   const dbDocument = await db.document.create({
     data: {
-      src: documentId,
+      src: src,
+      id: documentId,
       documentType: DocumentType.URL,
       title: docs[0].metadata.title,
-      id: documentId,
       indexed: true,
       documentData: {
         create: {

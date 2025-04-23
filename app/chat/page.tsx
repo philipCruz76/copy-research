@@ -17,9 +17,9 @@ export default function ChatPage() {
     maxSteps: 5,
   });
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white">
+    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white relative">
       {/* Chat header - similar to ChatGPT */}
-      <header className="flex items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur p-2 mobile:p-4">
+      <header className="sticky top-0 z-1 flex items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur p-2 mobile:p-4">
         <h1 className="text-lg font-semibold">Research Assistant</h1>
         <button
           onClick={() => setMessages([])}
@@ -30,8 +30,8 @@ export default function ChatPage() {
       </header>
 
       {/* Messages container */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto pt-6 pb-24">
+      <div className="flex-1 overflow-y-auto pb-32">
+        <div className="max-w-3xl mx-auto pt-6">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full mt-12 px-4 text-center">
               <h2 className="text-2xl font-semibold mb-6">
@@ -90,7 +90,7 @@ export default function ChatPage() {
       </div>
 
       {/* Fixed chat input at bottom */}
-      <div className="fixed bottom-0 left-64 right-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6">
+      <div className="fixed bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
         <ChatInput
           input={input}
           setInput={setInput}

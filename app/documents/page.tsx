@@ -10,12 +10,15 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Document, DocumentData } from "@prisma/client";
 import DocumentDataComponent from "../components/documents/DocumentData";
-
-type DocumentWithData = Document & { documentData: DocumentData["data"] };
+import DocumentInfoButtonMobile from "../components/documents/DocumentInfoButtonMobile";
+import DocumentInfoButtonDesktop from "../components/documents/DocumentInfoButtonDesktop";
+import { DocumentWithData } from "../lib/types/documentUpload.types";
+import { useDocumentSelection } from "../lib/stores/document-selection";
+import { useMediaQuery } from "react-responsive";
+import useSWR from "swr";
 
 // Animation variants for list items
 const listItemVariants = {
@@ -44,37 +47,17 @@ const containerVariants = {
 };
 
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState<DocumentWithData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    null,
-  );
   const [searchTerm, setSearchTerm] = useState("");
-  const [showDetail, setShowDetail] = useState(false);
-
-  useEffect(() => {
-    async function fetchDocuments() {
-      try {
-        const response = await fetch("/api/documents");
-        if (!response.ok) {
-          throw new Error("Failed to fetch documents");
-        }
-        const data = await response.json();
-        setDocuments(data);
-      } catch (error) {
-        console.error("Error fetching documents:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchDocuments();
-  }, []);
-
-  const handleDocumentClick = (documentId: string) => {
-    setSelectedDocumentId(documentId);
-    setShowDetail(true);
-  };
+  const { selectedDocumentId, setSelectedDocumentId, showDetail, setShowDetail } = useDocumentSelection();
+  const isNotDesktop = useMediaQuery({maxWidth: 900});
+  
+  // Use SWR for data fetching with caching
+  const fetcher = useCallback((url: string) => fetch(url).then(res => res.json()), []);
+  const { data: documents = [], isLoading, error } = useSWR<DocumentWithData[]>("/api/documents", fetcher, {
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+    dedupingInterval: 60000, // 1 minute
+  });
 
   const closeDetail = () => {
     setShowDetail(false);
@@ -83,6 +66,12 @@ export default function DocumentsPage() {
       setSelectedDocumentId(null);
     }, 300);
   };
+
+  useEffect(()=> {
+    if (isNotDesktop) {
+      setShowDetail(false);
+    }
+  }, [isNotDesktop, setShowDetail]);
 
   const selectedDocument = documents.find(
     (doc) => doc.id === selectedDocumentId,
@@ -204,66 +193,14 @@ export default function DocumentsPage() {
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  <button
-                    onClick={() => handleDocumentClick(document.id)}
-                    className={`w-full text-left block p-4 rounded-lg border transition-all duration-200 ${
-                      selectedDocumentId === document.id
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400"
-                        : "border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                    }`}
-                    aria-expanded={selectedDocumentId === document.id}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-3 items-start">
-                        <div
-                          className={`p-2 rounded ${
-                            selectedDocumentId === document.id
-                              ? "bg-indigo-100 dark:bg-indigo-800"
-                              : "bg-gray-100 dark:bg-zinc-800"
-                          }`}
-                        >
-                          <FileText
-                            className={`h-5 w-5 ${
-                              selectedDocumentId === document.id
-                                ? "text-indigo-600 dark:text-indigo-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">
-                            {document.title || "Untitled Document"}
-                          </h3>
-                          {document.description && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
-                              {document.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center mr-4">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {new Date(document.createdAt).toLocaleDateString()}
-                        </div>
-                        <motion.div
-                          animate={{
-                            rotate: selectedDocumentId === document.id ? 90 : 0,
-                          }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ArrowRight
-                            className={`h-4 w-4 ${
-                              selectedDocumentId === document.id
-                                ? "text-indigo-500 dark:text-indigo-400"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </motion.div>
-                      </div>
-                    </div>
-                  </button>
+                  <>
+                   <div className="flex desktop:hidden">
+                    <DocumentInfoButtonMobile document={document} />
+                   </div>
+                   <div className="hidden desktop:flex">
+                    <DocumentInfoButtonDesktop document={document} />
+                   </div>
+                  </>
                 </motion.div>
               ))}
             </motion.div>

@@ -1,3 +1,4 @@
+import { Document, DocumentData } from "@prisma/client";
 import { z } from "zod";
 
 export const DocumentUploadSchema = z.object({
@@ -12,3 +13,5 @@ export const DocumentUploadSchema = z.object({
 });
 
 export type DocumentType = z.infer<typeof DocumentUploadSchema>;
+
+export type  DocumentWithData = Document & { documentData: DocumentData["data"] };

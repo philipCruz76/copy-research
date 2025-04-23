@@ -95,16 +95,30 @@ function PureChatInput({
     setCharCount(input.length);
   }, [input]);
 
+  // Handle window resize to adjust textarea height
+  useEffect(() => {
+    const handleResize = () => {
+      if (textareaRef.current) {
+        adjustHeight();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
-    <div className="w-full px-2 py-2 sm:px-4 md:py-4 lg:px-6">
-      <div className="relative max-w-3xl mx-auto bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/20 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+    <div className="flex flex-col gap-2 px-4 py-2  desktop:py-4 tablet:py-4 desktop:max-w-3xl mx-auto ">
+      <div className="relative flex justify-center w-full bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/20 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]">
         <Textarea
           ref={textareaRef}
           placeholder="Message..."
           value={input}
           onChange={handleInput}
           className={cn(
-            "min-h-[56px] max-h-[200px] py-3 pl-4 pr-14 overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
+            "min-h-[56px] max-h-[200px] py-3 pl-4 pr-14 w-full overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
             className,
             charCount > MAX_CHARS && "border-red-500",
           )}

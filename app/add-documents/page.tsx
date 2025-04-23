@@ -1,17 +1,12 @@
 "use client";
 
-import { Upload, Link as LinkIcon } from "lucide-react";
-import { Input } from "../lib/ui/Input";
-import {
-  generateChecksum,
-  generateRandomFileName,
-  isValidURL,
-} from "../lib/utils";
+import { Upload, Link as LinkIcon, Loader2, AlertCircle } from "lucide-react";
+import { isValidURL } from "../lib/utils";
 import { toast } from "sonner";
-import { lazy, useState } from "react";
-import { downloadDocument } from "../lib/storage";
+import { lazy, useEffect, useState } from "react";
 import {
   checkForDocumentLimit,
+  documentLimitCheck,
   processUrl,
 } from "../lib/actions/document-actions";
 import { useFileUploadModal } from "../lib/stores/file-upload";
@@ -23,154 +18,96 @@ const FileUploadModalMobile = lazy(
 const FileUploadModalDesktop = lazy(
   () => import("@/app/components/modal/FileUploadModalDesktop"),
 );
-const acceptedTypes = [
-  "text/plain",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
 
 export default function AddDocumentsPage() {
-  const [documentURL, setDocumentURL] = useState<string | null>(null);
-  const [documentContent, setDocumentContent] = useState<string | null>(null);
   const [url, setUrl] = useState<string>("");
+  const [isUrlLoading, setIsUrlLoading] = useState<boolean>(false);
+  const [limitReached, setLimitReached] = useState<boolean>(false);
+  const [limitMessage, setLimitMessage] = useState<string>("");
   const { setIsOpen } = useFileUploadModal();
   const isDesktopOrLaptop = useMediaQuery({ minWidth: 900 });
 
-  const documentLimitCheck = async () => {
+  const handleURLUpload = async (url: string) => {
+    try {
+      setIsUrlLoading(true);
+      
+      // Start loading toast with promise
+      const toastPromise = toast.promise(
+        (async () => {
+          // Validate URL
+          const { isValid, sanitizedUrl } = isValidURL(url);
+          await documentLimitCheck();
+          if (!isValid) {
+            throw new Error("Please enter a valid URL");
+          }
+
+          // Proceed with the sanitized URL
+          const response = await processUrl(sanitizedUrl);
+          if (!response.success) {
+            throw new Error(response.message);
+          }
+          
+          setUrl(""); // Clear the input field after successful upload
+          
+          // Check if we're now at the limit after this upload
+          await checkLimit();
+          
+          return response;
+        })(),
+        {
+          loading: 'Processing URL...',
+          success: (data) => data.message || 'URL processed successfully!',
+          error: (err) => err.message || 'An error occurred while processing the URL'
+        }
+      );
+      
+      await toastPromise; // Wait for the promise to resolve or reject
+    } catch (error) {
+      // Additional error handling if needed
+    } finally {
+      setIsUrlLoading(false);
+    }
+  };
+
+  const handleFileUploadClick = async () => {
+    try {
+      setIsOpen(true);
+    } catch (error) {
+      toast.error("Failed to check document limits");
+    }
+  };
+  
+  const checkLimit = async () => {
     const response = await checkForDocumentLimit();
     if (!response.success) {
+      setLimitReached(true);
+      setLimitMessage(response.message);
       toast.error(response.message);
-      return;
-    }
-  };
-
-  const handleURLUpload = async (url: string) => {
-    // Validate URL
-    const { isValid, sanitizedUrl } = isValidURL(url);
-    await documentLimitCheck();
-    if (!isValid) {
-      toast.error("Please enter a valid URL");
-      return;
-    }
-
-    // Proceed with the sanitized URL
-    const response = await processUrl(sanitizedUrl);
-    if (response.success) {
-      toast.success(response.message);
     } else {
-      toast.error(response.message);
+      setLimitReached(false);
+      setLimitMessage("");
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    await documentLimitCheck();
-    const checksum = await generateChecksum(file);
-    const documentId = await generateRandomFileName();
-
-    console.log(documentId, file.type, file.size, checksum);
-    try {
-      // Get the signed URL from our API route
-      const response = await fetch("/api/fileUpload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documentId,
-          fileType: file.type,
-          fileSize: file.size,
-          checksum,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        toast.error(data.message);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("API Response:", data);
-
-      if (
-        !data.signedUrl ||
-        !data.signedUrl.success ||
-        !data.signedUrl.success.url
-      ) {
-        throw new Error("No valid signed URL returned");
-      }
-
-      const signedUrl = data.signedUrl.success.url;
-      console.log("Signed URL:", signedUrl);
-
-      // Step 2: Upload the file to S3 using the signed URL
-      const uploadResponse = await fetch(signedUrl, {
-        method: "PUT", // Important: Use PUT not POST for S3 signed URLs
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(
-          `Failed to upload file: ${uploadResponse.status} ${uploadResponse.statusText}`,
-        );
-      }
-
-      // Get the file URL from the upload response
-      const resultURL = new URL(uploadResponse.url);
-      const objectLocation = resultURL.origin + resultURL.pathname;
-      setDocumentURL(objectLocation);
-
-      const { content, text } = await downloadDocument(documentId);
-
-      if (!content) {
-        toast.error("Failed to download document");
-        return;
-      }
-
-      if (!text) {
-        toast.error("Failed to download document");
-        return;
-      }
-
-      await fetch("/api/pinecone-upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          documentId,
-          fileType: file.type,
-          documentURL: objectLocation,
-          checksum,
-        }),
-      });
-
-      if (!response.ok) {
-        toast.error("Failed to upload documents to Pinecone");
-        return;
-      }
-
-      toast.success("Documents loaded to db");
-      setDocumentContent(text?.join(" ") ?? "No text found");
-
-      toast.success("Document uploaded successfully");
-    } catch (error) {
-      console.error("Error in file upload process:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to upload document",
-      );
-    }
-  };
+  useEffect(() => {
+    checkLimit();
+  }, []);
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white p-6">
+    <div className="flex flex-col h-full max-w-[100dvw] bg-white dark:bg-zinc-900 text-black dark:text-white p-6">
       <header className="mb-6">
         <h1 className="text-2xl font-bold">Add Documents</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Upload documents or add web URLs to train your AI assistant
         </p>
       </header>
+      
+      {limitReached && (
+        <div className="mb-6 p-4 border border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
+          <AlertCircle className="h-5 w-5" />
+          <p>{limitMessage}</p>
+        </div>
+      )}
 
       <form className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
         {/* File Upload Card */}
@@ -184,44 +121,23 @@ export default function AddDocumentsPage() {
           </p>
           <button
             type="button"
-            onClick={() => {
-              setIsOpen(true);
-              // Previous behavior
-              // document.getElementById("fileUpload")?.click()
-            }}
-            className="w-full px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+            onClick={handleFileUploadClick}
+            disabled={isUrlLoading || limitReached}
+            className={`w-full px-4 py-2 rounded-md transition-colors flex items-center justify-center ${
+              isUrlLoading || limitReached 
+              ? "bg-gray-300 dark:bg-zinc-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" 
+              : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+            }`}
           >
-            Choose Files
-            <Input
-              type="file"
-              id="fileUpload"
-              accept={acceptedTypes.join(",")}
-              max={1}
-              onChange={(e: React.FormEvent<HTMLInputElement>) => {
-                e.preventDefault();
-                const target = e.target as HTMLInputElement & {
-                  files: FileList;
-                };
-                handleFileUpload(target.files[0]);
-              }}
-              style={{ display: "none" }}
-            />
+            {isUrlLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <span>Wait...</span>
+              </>
+            ) : (
+              "Upload"
+            )}
           </button>
-          {documentURL && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Document URL: {documentURL}
-              </p>
-            </div>
-          )}
-
-          {documentContent && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Document Content: {documentContent}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Web URL Card */}
@@ -245,10 +161,13 @@ export default function AddDocumentsPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault(); // Prevent form submission
-                  handleURLUpload(url);
+                  if (!isUrlLoading && !limitReached) {
+                    handleURLUpload(url);
+                  }
                 }
               }}
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-l-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              disabled={isUrlLoading || limitReached}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-l-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               id="urlUpload"
@@ -257,9 +176,17 @@ export default function AddDocumentsPage() {
                 e.preventDefault();
                 handleURLUpload(url);
               }}
-              className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-r-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              disabled={isUrlLoading || !url.trim() || limitReached}
+              className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-r-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Add
+              {isUrlLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing
+                </>
+              ) : (
+                "Add"
+              )}
             </button>
           </div>
         </div>
