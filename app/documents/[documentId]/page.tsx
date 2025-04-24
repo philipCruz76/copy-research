@@ -19,16 +19,19 @@ import { DocumentWithData } from "@/app/lib/types/documentUpload.types";
 import useSWR from "swr";
 
 type Props = {
-  params: {
+  params: Promise<{
     documentId: string;
-  };
+  }>;
 };
 
 export default function DocumentPage({ params }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"content" | "details">("content");
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { documentId } = params;
+
+  // Necessary for Next.js 15
+  const { documentId } = React.use(params);
+
   // Use SWR for data fetching with caching
   const fetcher = useCallback(async (id: string) => {
     const doc = await getDocumentById(id);

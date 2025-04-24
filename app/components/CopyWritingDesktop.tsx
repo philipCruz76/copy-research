@@ -124,7 +124,7 @@ export default function CopyWritingDesktop() {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             disabled={isGenerating}
-            className="w-full min-h-[120px] px-3 py-2 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full min-h-[120px] px-3 py-2 rounded-md border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed mobile:text-[16px] mobile:leading-[16px]"
           />
         </div>
 

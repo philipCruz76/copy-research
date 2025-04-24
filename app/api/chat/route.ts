@@ -3,7 +3,10 @@ import { createDataStreamResponse, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { extractTextFromMessage } from "@/app/lib/utils";
 import { SYSTEM_PROMPT, USER_PROMPT } from "@/app/lib/ai/templates";
-import { getSearchResults } from "@/app/lib/actions/search-actions";
+import {
+  getSearchResults,
+  synthesizeQueryFrom,
+} from "@/app/lib/actions/search-actions";
 import { z } from "zod";
 
 // Allow streaming responses up to 30 seconds
@@ -64,7 +67,7 @@ export async function POST(req: Request) {
 
     const result = await streamText({
       model: openai("gpt-4o-mini"),
-      temperature: 0.7,
+      temperature: 0.3,
       system: SYSTEM_PROMPT(new Date().getFullYear()),
       messages: [
         {
@@ -77,11 +80,16 @@ export async function POST(req: Request) {
           description:
             "Search the web for information not available in the provided context",
           parameters: z.object({
-            query: z
-              .string()
-              .describe("The search query to find relevant information"),
+            chatContext: z.array(z.string()).describe("The chat history"),
           }),
-          execute: async ({ query }) => {
+          execute: async ({ chatContext }) => {
+            const chatContextArray = messages.map((message: any) => {
+              if (typeof message.content === "string") {
+                return message.content;
+              }
+            });
+            // Direct string content
+            const query = await synthesizeQueryFrom(chatContextArray);
             const searchResults = await getSearchResults(query);
             // Format search results for the model to use
             const formattedResults = searchResults.pages

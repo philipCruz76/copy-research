@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  documentLimitCheck,
-  handleFileUpload,
-} from "@/app/lib/actions/document-actions";
+import { handleFileUpload } from "@/app/lib/actions/document-actions";
 import { useFileUploadModal } from "@/app/lib/stores/file-upload";
 import {
   Drawer,
@@ -16,6 +13,12 @@ import { Input } from "@/app/lib/ui/Input";
 import { UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  FileUploadType,
+  FileUploadValidator,
+} from "@/app/lib/types/documentUpload.types";
 
 const acceptedTypes = [
   "text/plain",
@@ -28,10 +31,17 @@ const FileUploadModalMobile = () => {
   const { isOpen, setIsOpen } = useFileUploadModal();
   const drawerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileName, setFileName] = useState<string>("");
+  const {
+    formState: { isValid },
+    handleSubmit,
+    register,
+  } = useForm<FileUploadType>({
+    mode: "onChange",
+    resolver: zodResolver(FileUploadValidator),
+  });
 
-  const processFile = async (file: File) => {
-    if (!file) return;
-
+  const fileUpload = async (file: File) => {
     try {
       setIsLoading(true);
       const result = await handleFileUpload(file);
@@ -49,6 +59,11 @@ const FileUploadModalMobile = () => {
     }
   };
 
+  const fileUploadHandler: SubmitHandler<FileUploadType> = async (
+    data: FileUploadType,
+  ) => {
+    if (!data.file) return;
+  };
   return (
     <Drawer
       open={isOpen}
@@ -94,9 +109,10 @@ const FileUploadModalMobile = () => {
           </DrawerDescription>
         </DrawerHeader>
 
-        <div
+        <form
           className="p-4 flex flex-col gap-6 items-center justify-center flex-1 max-w-sm mx-auto overflow-y-auto"
           data-vaul-no-drag
+          onSubmit={handleSubmit(fileUploadHandler)}
         >
           <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center mb-2">
             <UploadCloud className="h-8 w-8 text-gray-500 dark:text-gray-400" />
@@ -106,7 +122,12 @@ const FileUploadModalMobile = () => {
             Upload PDF, DOCX, TXT, or other text-based documents
           </p>
 
-          <div className="w-full mt-2">
+          <div className="flex flex-col gap-2 w-full mt-2">
+            <Input
+              {...register("title")}
+              placeholder="Enter a title for your document"
+              className="w-full h-12 px-4 py-2 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
+            />
             <button
               type="button"
               onClick={() =>
@@ -131,7 +152,12 @@ const FileUploadModalMobile = () => {
                     files: FileList;
                   };
                   if (target.files && target.files.length > 0) {
-                    processFile(target.files[0]);
+                    setFileName(target.files[0].name);
+                    toast.promise(fileUpload(target.files[0]), {
+                      loading: "Uploading file...",
+                      success: "File uploaded successfully",
+                      error: "Failed to upload file",
+                    });
                   }
                 }}
                 style={{ display: "none" }}
@@ -142,7 +168,7 @@ const FileUploadModalMobile = () => {
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
             Max file size: 10MB
           </p>
-        </div>
+        </form>
       </DrawerContent>
     </Drawer>
   );

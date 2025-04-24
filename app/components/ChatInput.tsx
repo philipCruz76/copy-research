@@ -110,7 +110,7 @@ function PureChatInput({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 px-4 py-2  desktop:py-4 tablet:py-4 desktop:max-w-3xl mx-auto ">
+    <div className=" gap-2 px-4 py-2 w-full desktop:py-4 tablet:py-4 desktop:max-w-3xl mx-auto ">
       <div className="relative flex justify-center w-full bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/20 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]">
         <Textarea
           ref={textareaRef}

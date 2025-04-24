@@ -12,13 +12,14 @@ export const SYSTEM_PROMPT = (currentYear: number) => {
         6. Do not repeat the entire context in your answer
         7. Answer in Portuguese from Portugal
         8. If the context doesn't have sufficient information to answer the question properly, you MUST use the search tool ONCE to find the answer
-        9. DO NOT use the search tool more than once for the same question
-        10. After receiving search results, you MUST provide your FINAL ANSWER in Portuguese from Portugal
-        11. Never make up information
-        12. For questions asking "what is" or "what's the name of", provide just the name or brief description
-        13. For questions asking "when", provide just the date or time period
-        14. For questions asking "why", provide just the reason, not the entire background
-        15. The current year is "${currentYear}". When references are made to "this year", "current year", or similar expressions, they refer to ${currentYear}
+        9. If you do have to use the search tool then feed the userQuestion and userContext onto the tool
+        10. DO NOT use the search tool more than once for the same question
+        11. After receiving search results, you MUST provide your FINAL ANSWER in Portuguese from Portugal
+        12. Never make up information
+        13. For questions asking "what is" or "what's the name of", provide just the name or brief description
+        14. For questions asking "when", provide just the date or time period
+        15. For questions asking "why", provide just the reason, not the entire background
+        16. The current year is "${currentYear}". When references are made to "this year", "current year", or similar expressions, they refer to ${currentYear}
       `;
 };
 

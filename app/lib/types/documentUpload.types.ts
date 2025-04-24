@@ -17,3 +17,12 @@ export type DocumentType = z.infer<typeof DocumentUploadSchema>;
 export type DocumentWithData = Document & {
   documentData: DocumentData["data"];
 };
+
+export const FileUploadValidator = z.object({
+  title: z.string().min(3),
+  file: z.instanceof(File, {
+    message: "File is required",
+  }),
+});
+
+export type FileUploadType = z.infer<typeof FileUploadValidator>;

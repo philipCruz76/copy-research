@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "../components/ChatInput";
+import { useEffect, useRef } from "react";
 
 export default function ChatPage() {
   const {
@@ -16,6 +17,17 @@ export default function ChatPage() {
   } = useChat({
     maxSteps: 5,
   });
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white relative">
       {/* Chat header - similar to ChatGPT */}
@@ -84,13 +96,14 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </div>
       </div>
 
       {/* Fixed chat input at bottom */}
-      <div className="fixed bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
+      <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
         <ChatInput
           input={input}
           setInput={setInput}

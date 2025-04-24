@@ -133,7 +133,7 @@ export default function DocumentsPage() {
             <input
               type="text"
               placeholder="Search documents..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 mobile:text-[16px] mobile:leading-[16px]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
