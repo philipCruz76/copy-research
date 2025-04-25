@@ -96,6 +96,15 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
+              {(status === "submitted") && (
+                <div className="flex justify-start w-full">
+                  <div className="max-w-[85%] px-[18px] py-[8px] text-black dark:text-white">
+                    <div className="italic text-gray-500 dark:text-gray-400">
+                      Thinking...
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           )}

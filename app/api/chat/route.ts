@@ -3,10 +3,7 @@ import { createDataStreamResponse, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { extractTextFromMessage } from "@/app/lib/utils";
 import { SYSTEM_PROMPT, USER_PROMPT } from "@/app/lib/ai/templates";
-import {
-  getSearchResults,
-  synthesizeQueryFrom,
-} from "@/app/lib/actions/search-actions";
+import { getSearchResults, synthesizeQueryFrom } from "@/app/lib/actions/search-actions";
 import { z } from "zod";
 
 // Allow streaming responses up to 30 seconds
@@ -67,7 +64,7 @@ export async function POST(req: Request) {
 
     const result = await streamText({
       model: openai("gpt-4o-mini"),
-      temperature: 0.3,
+      temperature: 0.2,
       system: SYSTEM_PROMPT(new Date().getFullYear()),
       messages: [
         {
@@ -99,8 +96,12 @@ export async function POST(req: Request) {
               )
               .join("\n\n");
 
-            // Return formatted results with instructions to answer in Portuguese
-            return `${formattedResults}\n\nWith this information, please provide a final answer to the user's question in Portuguese.`;
+              const isPortuguese = userQuestion.match(/[áàâãéèêíïóôõöúüçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]/) !== null;
+            if (isPortuguese) {
+              return `${formattedResults}\n\nCom esta informação, por favor forneça uma resposta final à pergunta do utilizador em Português.`;
+            } else {
+              return `${formattedResults}\n\nWith this information, please provide a final answer to the user's question in English.`;
+            }
           },
         },
       },
