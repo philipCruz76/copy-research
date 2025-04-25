@@ -2,11 +2,8 @@
 
 import {
   FileText,
-  Calendar,
-  ArrowRight,
   Upload,
   Search,
-  Filter,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -45,6 +42,45 @@ const containerVariants = {
     },
   },
 };
+
+// Skeleton components for document list
+const SkeletonDocumentItem = () => (
+  <div className="p-4 border border-gray-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md transition-shadow animate-pulse">
+    <div className="flex justify-between">
+      <div className="flex items-start gap-3 flex-1">
+        <div className="p-2 bg-gray-200 dark:bg-zinc-700 rounded h-10 w-10"></div>
+        <div className="flex-1">
+          <div className="h-5 bg-gray-200 dark:bg-zinc-700 rounded w-1/3 mb-2"></div>
+          <div className="h-4 bg-gray-200 dark:bg-zinc-700 rounded w-2/3 mb-2"></div>
+          <div className="flex items-center mt-2">
+            <div className="h-3 w-3 bg-gray-200 dark:bg-zinc-700 rounded-full mr-1"></div>
+            <div className="h-3 bg-gray-200 dark:bg-zinc-700 rounded w-24"></div>
+          </div>
+        </div>
+      </div>
+      <div className="h-8 w-8 bg-gray-200 dark:bg-zinc-700 rounded-md"></div>
+    </div>
+  </div>
+);
+
+const SkeletonDocumentList = () => (
+  <div className="grid gap-3">
+    {Array.from({ length: 6 }).map((_, index) => (
+      <SkeletonDocumentItem key={index} />
+    ))}
+  </div>
+);
+
+const SkeletonSearchBar = () => (
+  <div className="relative mb-4 animate-pulse">
+    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+      <div className="h-4 w-4 bg-gray-200 dark:bg-zinc-700 rounded"></div>
+    </div>
+    <div className="w-full h-10 bg-gray-200 dark:bg-zinc-700 rounded-md"></div>
+  </div>
+);
+
+
 
 export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,51 +144,53 @@ export default function DocumentsPage() {
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <div className="p-6 border-b border-gray-200 dark:border-zinc-800">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">Documents</h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                Manage your uploaded documents
-              </p>
-            </div>
+          
+      <>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold">Documents</h1>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">
+                    Manage your uploaded documents
+                  </p>
+                </div>
 
-            <Link
-              href="/add-documents"
-              className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Upload Document
-            </Link>
-          </div>
+                <Link
+                  href="/add-documents"
+                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload Document
+                </Link>
+              </div>
 
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search documents..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 mobile:text-[16px] mobile:leading-[16px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-3 flex items-center"
-              >
-                <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-              </button>
-            )}
-          </div>
+              {/* Search Bar */}
+              <div className="relative mb-4">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search documents..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 mobile:text-[16px] mobile:leading-[16px]"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute inset-y-0 right-3 flex items-center"
+                  >
+                    <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  </button>
+                )}
+              </div>
+            </>
+      
         </div>
 
         <div className="flex-1 overflow-auto p-4">
           {isLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
-            </div>
+            <SkeletonDocumentList />
           ) : !filteredDocuments || filteredDocuments.length === 0 ? (
             <motion.div
               className="flex flex-col items-center justify-center h-full p-8 text-center"

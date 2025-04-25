@@ -107,11 +107,11 @@ export default function CopyWritingDesktop() {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white p-6">
       <h1 className="text-2xl font-bold mb-6">AI Copywriter</h1>
+      <h3 className="text-lg font-medium mb-6">Generate professional-quality copy for your blog posts or newsletters
+      with AI assistance.</h3>
       <p className="text-gray-500 dark:text-gray-400 mb-8">
-        Generate professional-quality copy for your blog posts or newsletters
-        with AI assistance.
+      DISCLAIMER: This is a demo and the content generated is not guaranteed to be accurate or appropriate. Content is based solely on the documents uploaded to the tool.
       </p>
-
       <div className="space-y-6 max-w-4xl mx-auto desktop:min-w-[900px]">
         {/* Subject Input */}
         <div>
