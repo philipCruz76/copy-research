@@ -19,6 +19,7 @@ import {
   FileUploadType,
   FileUploadValidator,
 } from "@/app/lib/types/documentUpload.types";
+import { cn } from "@/app/lib/utils";
 
 const acceptedTypes = [
   "text/plain",
@@ -31,22 +32,26 @@ const FileUploadModalMobile = () => {
   const { isOpen, setIsOpen } = useFileUploadModal();
   const drawerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fileName, setFileName] = useState<string>("");
   const {
     formState: { isValid },
     handleSubmit,
     register,
+    setValue,
+    trigger,
   } = useForm<FileUploadType>({
     mode: "onChange",
     resolver: zodResolver(FileUploadValidator),
   });
 
-  const fileUpload = async (file: File) => {
+  const fileUploadHandler: SubmitHandler<FileUploadType> = async (
+    data: FileUploadType,
+  ) => {
     try {
       setIsLoading(true);
-      const result = await handleFileUpload(file);
+      const result = await handleFileUpload(data.file, data.title);
       if (result.success) {
         toast.success(result.message);
+
         setIsOpen(false);
       } else {
         toast.error(result.message);
@@ -57,12 +62,6 @@ const FileUploadModalMobile = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fileUploadHandler: SubmitHandler<FileUploadType> = async (
-    data: FileUploadType,
-  ) => {
-    if (!data.file) return;
   };
   return (
     <Drawer
@@ -114,9 +113,18 @@ const FileUploadModalMobile = () => {
           data-vaul-no-drag
           onSubmit={handleSubmit(fileUploadHandler)}
         >
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center mb-2">
-            <UploadCloud className="h-8 w-8 text-gray-500 dark:text-gray-400" />
-          </div>
+          <button
+            type="submit"
+            disabled={isValid === false}
+            className={cn(
+              "w-16 h-16 rounded-full border hover:bg-gray-200 hover:scale-105 transition-all duration-300 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center mb-2",
+              isValid === false && "opacity-50 cursor-not-allowed",
+            )}
+          >
+            <UploadCloud
+              className={cn("h-8 w-8 text-gray-500 dark:text-gray-400")}
+            />
+          </button>
 
           <p className="text-gray-500 dark:text-gray-400 text-center text-sm">
             Upload PDF, DOCX, TXT, or other text-based documents
@@ -126,7 +134,7 @@ const FileUploadModalMobile = () => {
             <Input
               {...register("title")}
               placeholder="Enter a title for your document"
-              className="w-full h-12 px-4 py-2 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
+              className="w-full h-12 px-4 py-2 flex items-center justify-center  bg-white text-black rounded-lg  hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
             />
             <button
               type="button"
@@ -146,18 +154,15 @@ const FileUploadModalMobile = () => {
                 id="mobileFileUpload"
                 accept={acceptedTypes.join(",")}
                 max={1}
+                size={1024 * 1024 * 10} //10MB max file
                 onChange={(e: React.FormEvent<HTMLInputElement>) => {
                   e.preventDefault();
                   const target = e.target as HTMLInputElement & {
                     files: FileList;
                   };
                   if (target.files && target.files.length > 0) {
-                    setFileName(target.files[0].name);
-                    toast.promise(fileUpload(target.files[0]), {
-                      loading: "Uploading file...",
-                      success: "File uploaded successfully",
-                      error: "Failed to upload file",
-                    });
+                    setValue("file", target.files[0]);
+                    trigger("file");
                   }
                 }}
                 style={{ display: "none" }}

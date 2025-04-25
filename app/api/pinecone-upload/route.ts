@@ -12,10 +12,11 @@ type DocumentRequest = {
   fileType: string;
   documentURL: string;
   checksum: string;
+  documentTitle: string;
 };
 export async function POST(req: Request) {
   try {
-    const { text, documentId, fileType, documentURL, checksum } =
+    const { text, documentId, fileType, documentURL, checksum, documentTitle } =
       (await req.json()) as DocumentRequest;
 
     let uniqueIds: string[] = [];
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
         documentType: DocumentType.FILES,
         id: documentId,
         indexed: true,
+        title: documentTitle,
         documentData: {
           create: {
             data: text.join(" "),

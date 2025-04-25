@@ -36,7 +36,7 @@ export async function documentLimitCheck() {
   }
 }
 
-export const handleFileUpload = async (file: File) => {
+export const handleFileUpload = async (file: File, documentTitle: string) => {
   await documentLimitCheck();
   const checksum = await generateChecksum(file);
   const documentId = await generateRandomFileName();
@@ -116,6 +116,7 @@ export const handleFileUpload = async (file: File) => {
         fileType: file.type,
         documentURL: objectLocation,
         checksum,
+        documentTitle,
       }),
     });
 
