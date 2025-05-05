@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  FileText,
-  Upload,
-  Search,
-  X,
-} from "lucide-react";
+import { FileText, Upload, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,8 +75,6 @@ const SkeletonSearchBar = () => (
   </div>
 );
 
-
-
 export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const {
@@ -144,48 +137,46 @@ export default function DocumentsPage() {
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <div className="p-6 border-b border-gray-200 dark:border-zinc-800">
-          
-      <>
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold">Documents</h1>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">
-                    Manage your uploaded documents
-                  </p>
-                </div>
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-2xl font-bold">Documents</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  Manage your uploaded documents
+                </p>
+              </div>
 
-                <Link
-                  href="/add-documents"
-                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2"
+              <Link
+                href="/add-documents"
+                className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Upload Document
+              </Link>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search documents..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 mobile:text-[16px] mobile:leading-[16px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute inset-y-0 right-3 flex items-center"
                 >
-                  <Upload className="h-4 w-4" />
-                  Upload Document
-                </Link>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative mb-4">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search documents..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 mobile:text-[16px] mobile:leading-[16px]"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="absolute inset-y-0 right-3 flex items-center"
-                  >
-                    <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                  </button>
-                )}
-              </div>
-            </>
-      
+                  <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                </button>
+              )}
+            </div>
+          </>
         </div>
 
         <div className="flex-1 overflow-auto p-4">

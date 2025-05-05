@@ -57,3 +57,17 @@ model DocumentData {
 
     @@unique([documentId])
 }
+
+model Content {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  topic          String
+  audience       String?
+  style          String?
+  keywords       String[]
+  originalBlog   String   @db.Text
+  derivedType    String?  // "Newsletter" or "Summary"
+  derivedContent String?  @db.Text
+  createdAt      DateTime @default(now())
+}

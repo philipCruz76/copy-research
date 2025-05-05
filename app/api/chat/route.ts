@@ -3,7 +3,10 @@ import { createDataStreamResponse, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { extractTextFromMessage } from "@/app/lib/utils";
 import { SYSTEM_PROMPT, USER_PROMPT } from "@/app/lib/ai/templates";
-import { getSearchResults, synthesizeQueryFrom } from "@/app/lib/actions/search-actions";
+import {
+  getSearchResults,
+  synthesizeQueryFrom,
+} from "@/app/lib/actions/search-actions";
 import { z } from "zod";
 
 // Allow streaming responses up to 30 seconds
@@ -96,7 +99,8 @@ export async function POST(req: Request) {
               )
               .join("\n\n");
 
-              const isPortuguese = userQuestion.match(/[áàâãéèêíïóôõöúüçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]/) !== null;
+            const isPortuguese =
+              userQuestion.match(/[áàâãéèêíïóôõöúüçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]/) !== null;
             if (isPortuguese) {
               return `${formattedResults}\n\nCom esta informação, por favor forneça uma resposta final à pergunta do utilizador em Português.`;
             } else {

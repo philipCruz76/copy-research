@@ -51,8 +51,8 @@ export default function ChatPage() {
               </h2>
               <p className="text-gray-500 dark:text-gray-400 max-w-md">
                 I'm a research agent that can help you find information and
-                parse through information either on the web or from your own
-                documents.
+                parse through information from your own documents or from the
+                web.
               </p>
             </div>
           ) : (
@@ -96,7 +96,7 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
-              {(status === "submitted") && (
+              {status === "submitted" && (
                 <div className="flex justify-start w-full">
                   <div className="max-w-[85%] px-[18px] py-[8px] text-black dark:text-white">
                     <div className="italic text-gray-500 dark:text-gray-400">

@@ -100,7 +100,6 @@ export const loadUrlDocument = async (url: string) => {
 };
 
 export async function indexUrlDocument(docs: Document[], src: string) {
-
   try {
     console.log("Indexing documents...");
 

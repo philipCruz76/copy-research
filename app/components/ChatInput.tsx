@@ -226,7 +226,9 @@ function PureChatInput({
 }
 
 export const ChatInput = memo(PureChatInput, (prevProps, nextProps) => {
-  if (prevProps.input !== nextProps.input) return false;
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
-  return true;
+  // Both conditions must be false to re-render
+  return (
+    prevProps.input === nextProps.input &&
+    prevProps.isLoading === nextProps.isLoading
+  );
 });

@@ -431,7 +431,7 @@ export function Sidebar({ className }: SidebarProps) {
 
           <NavItem
             href="/copywritter"
-            icon="/icons/clock.svg"
+            icon="/icons/paintbrush.svg"
             text="Copywritter"
             isCollapsed={isCollapsed}
             index={3}
@@ -447,7 +447,7 @@ export function Sidebar({ className }: SidebarProps) {
 
           <NavItem
             href="/appearance"
-            icon="/icons/paintbrush.svg"
+            icon="/icons/canvas.svg"
             text="Appearance"
             isCollapsed={isCollapsed}
             index={5}
