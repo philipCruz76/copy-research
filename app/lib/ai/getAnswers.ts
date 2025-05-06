@@ -1,3 +1,5 @@
+"use server";
+
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { loadDocumentsToDb } from "@/app/lib/ai/store";
 import { DocumentType } from "@prisma/client";
@@ -5,6 +7,8 @@ import { Document } from "@langchain/core/documents";
 import { generateChecksum, generateDocumentHash } from "@/app/lib/utils";
 import { getSignedURL } from "@/app/lib/storage";
 import db from "@/app/lib/db";
+import { getDocumentSummary } from "./getDocumentSummary";
+import { DocumentSummary } from "../types/documentUpload.types";
 
 export async function indexFileDocument(
   document: File,
@@ -92,7 +96,18 @@ export const loadUrlDocument = async (url: string) => {
       },
     });
 
-    return [processedDoc];
+    const documentSummary = await getDocumentSummary(processedDoc);
+
+    const documentWithSummary = {
+      ...processedDoc,
+      metadata: {
+        ...processedDoc.metadata,
+        summary: documentSummary.summary,
+        keyTopics: documentSummary.keyTopics,
+      },
+    };
+
+    return [documentWithSummary];
   } catch (error) {
     console.error("Error in URL upload:", error);
     throw new Error("Failed to load document from");

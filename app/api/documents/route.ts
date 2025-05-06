@@ -5,11 +5,7 @@ export async function GET() {
   try {
     const documents = await db.document.findMany({
       include: {
-        documentData: {
-          select: {
-            data: true,
-          },
-        },
+        documentData: true,
       },
       orderBy: {
         createdAt: "desc",

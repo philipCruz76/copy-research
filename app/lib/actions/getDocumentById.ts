@@ -1,7 +1,6 @@
 "use server";
 
 import db from "@/app/lib/db";
-import { DocumentWithData } from "../types/documentUpload.types";
 
 export async function getDocumentById(documentId: string) {
   try {
@@ -18,12 +17,7 @@ export async function getDocumentById(documentId: string) {
       throw new Error("Document not found");
     }
 
-    const documentWithData = {
-      ...document,
-      documentData: document["documentData"][0].data,
-    };
-
-    return documentWithData;
+    return document;
   } catch (error) {
     console.error("Error fetching document by ID:", error);
     throw new Error("Failed to fetch document by ID");

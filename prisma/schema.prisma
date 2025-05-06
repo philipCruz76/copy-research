@@ -51,6 +51,8 @@ model DocumentData {
     displayName String?
     documentId  String
     data        String?  @db.Text
+    summary     String?  @db.Text
+    keyTopics   String[]
     size        Int      @default(0)
     indexed     Boolean  @default(false)
     document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)

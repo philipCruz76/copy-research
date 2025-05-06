@@ -261,7 +261,7 @@ export default function DocumentsPage() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
             >
               <DocumentDataComponent
-                document={selectedDocument}
+                doc={selectedDocument}
                 onClose={closeDetail}
               />
             </motion.div>

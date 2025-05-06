@@ -46,6 +46,8 @@ export const loadDocumentsToDb = async (
           displayName: "Document Text",
           size: documents.length,
           indexed: true,
+          summary: docs[0].metadata.summary,
+          keyTopics: docs[0].metadata.keyTopics,
         },
       },
     },

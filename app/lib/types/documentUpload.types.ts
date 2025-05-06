@@ -15,7 +15,7 @@ export const DocumentUploadSchema = z.object({
 export type DocumentType = z.infer<typeof DocumentUploadSchema>;
 
 export type DocumentWithData = Document & {
-  documentData: DocumentData["data"];
+  documentData: DocumentData[];
 };
 
 export const FileUploadValidator = z.object({
@@ -26,3 +26,10 @@ export const FileUploadValidator = z.object({
 });
 
 export type FileUploadType = z.infer<typeof FileUploadValidator>;
+
+export const DocummentSummarySchema = z.object({
+  summary: z.string(),
+  keyTopics: z.array(z.string()),
+});
+
+export type DocumentSummary = z.infer<typeof DocummentSummarySchema>;
