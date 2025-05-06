@@ -293,26 +293,185 @@ export default function DocumentDataComponent({
             >
               {documentContent ? (
                 <>
-                {/* Summary Section */}
-                {documentSummary && (
+                  {/* Summary Section */}
+                  {documentSummary && (
+                    <motion.div
+                      className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.4 }}
+                    >
+                      <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
+                        <div className="flex items-center text-sm font-medium">
+                          <BookOpen className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
+                          Document Summary
+                        </div>
+                        <motion.button
+                          onClick={() =>
+                            setIsSummaryCollapsed(!isSummaryCollapsed)
+                          }
+                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {isSummaryCollapsed ? (
+                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                          ) : (
+                            <ChevronUp className="h-4 w-4 text-gray-500" />
+                          )}
+                        </motion.button>
+                      </div>
+                      <AnimatePresence>
+                        {!isSummaryCollapsed && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{
+                              height: "auto",
+                              opacity: 1,
+                              transition: {
+                                height: { duration: 0.4 },
+                                opacity: { duration: 0.3, delay: 0.1 },
+                              },
+                            }}
+                            exit={{
+                              height: 0,
+                              opacity: 0,
+                              transition: {
+                                height: { duration: 0.3 },
+                                opacity: { duration: 0.2 },
+                              },
+                            }}
+                            className="overflow-hidden"
+                          >
+                            <div className="whitespace-pre-wrap text-sm p-4 overflow-auto max-h-[30vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
+                              {documentSummary}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+
+                  {/* Key Topics Section */}
+                  {documentKeyTopics.length > 0 && (
+                    <motion.div
+                      className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35, duration: 0.4 }}
+                    >
+                      <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
+                        <div className="flex items-center text-sm font-medium">
+                          <Tag className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
+                          Key Topics
+                        </div>
+                        <div className="relative flex items-center">
+                          <Search className="absolute left-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                          <input
+                            type="text"
+                            placeholder="Filter topics..."
+                            value={topicFilter}
+                            onChange={(e) => setTopicFilter(e.target.value)}
+                            className="py-1 pl-7 pr-2 text-xs rounded border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-300"
+                          />
+                        </div>
+                      </div>
+                      <AnimatePresence>
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{
+                            height: "auto",
+                            opacity: 1,
+                            transition: {
+                              height: { duration: 0.4 },
+                              opacity: { duration: 0.3, delay: 0.1 },
+                            },
+                          }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-4">
+                            <div className="flex flex-wrap gap-2">
+                              {documentKeyTopics
+                                .filter((topic) =>
+                                  topic
+                                    .toLowerCase()
+                                    .includes(topicFilter.toLowerCase()),
+                                )
+                                .map((topic, index) => (
+                                  <motion.span
+                                    key={index}
+                                    className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-full text-xs font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
+                                    onClick={() => {
+                                      setTopicFilter(topic);
+                                    }}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{
+                                      opacity: 1,
+                                      scale: 1,
+                                      transition: {
+                                        delay: 0.1 + index * 0.05,
+                                        duration: 0.3,
+                                      },
+                                    }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                  >
+                                    {topic}
+                                  </motion.span>
+                                ))}
+                              {documentKeyTopics.filter((topic) =>
+                                topic
+                                  .toLowerCase()
+                                  .includes(topicFilter.toLowerCase()),
+                              ).length === 0 && (
+                                <motion.p
+                                  className="text-xs text-gray-500 dark:text-gray-400 py-1"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                >
+                                  No topics match your filter
+                                </motion.p>
+                              )}
+                              {topicFilter && (
+                                <motion.button
+                                  onClick={() => setTopicFilter("")}
+                                  className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline ml-2"
+                                  initial={{ opacity: 0 }}
+                                  animate={{
+                                    opacity: 1,
+                                    transition: { delay: 0.2 },
+                                  }}
+                                  whileHover={{ scale: 1.05 }}
+                                >
+                                  Clear filter
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+
+                  {/* Document Content Section */}
                   <motion.div
-                    className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4"
+                    className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.4 }}
+                    transition={{ delay: 0.4, duration: 0.4 }}
                   >
                     <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
                       <div className="flex items-center text-sm font-medium">
-                        <BookOpen className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
-                        Document Summary
+                        <FileInput className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
+                        Document Content
                       </div>
                       <motion.button
-                        onClick={() => setIsSummaryCollapsed(!isSummaryCollapsed)}
+                        onClick={() => setIsCollapsed(!isCollapsed)}
                         className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        {isSummaryCollapsed ? (
+                        {isCollapsed ? (
                           <ChevronDown className="h-4 w-4 text-gray-500" />
                         ) : (
                           <ChevronUp className="h-4 w-4 text-gray-500" />
@@ -320,7 +479,7 @@ export default function DocumentDataComponent({
                       </motion.button>
                     </div>
                     <AnimatePresence>
-                      {!isSummaryCollapsed && (
+                      {!isCollapsed && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{
@@ -341,163 +500,13 @@ export default function DocumentDataComponent({
                           }}
                           className="overflow-hidden"
                         >
-                          <div className="whitespace-pre-wrap text-sm p-4 overflow-auto max-h-[30vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
-                            {documentSummary}
+                          <div className="whitespace-pre-wrap font-mono text-sm p-4 overflow-auto max-h-[60vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
+                            {documentContent}
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </motion.div>
-                )}
-
-                {/* Key Topics Section */}
-                {documentKeyTopics.length > 0 && (
-                  <motion.div
-                    className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.35, duration: 0.4 }}
-                  >
-                    <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
-                      <div className="flex items-center text-sm font-medium">
-                        <Tag className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
-                        Key Topics
-                      </div>
-                      <div className="relative flex items-center">
-                        <Search className="absolute left-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
-                        <input
-                          type="text"
-                          placeholder="Filter topics..."
-                          value={topicFilter}
-                          onChange={(e) => setTopicFilter(e.target.value)}
-                          className="py-1 pl-7 pr-2 text-xs rounded border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-300"
-                        />
-                      </div>
-                    </div>
-                    <AnimatePresence>
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{
-                          height: "auto",
-                          opacity: 1,
-                          transition: {
-                            height: { duration: 0.4 },
-                            opacity: { duration: 0.3, delay: 0.1 },
-                          },
-                        }}
-                        className="overflow-hidden"
-                      >
-                        <div className="p-4">
-                          <div className="flex flex-wrap gap-2">
-                            {documentKeyTopics
-                              .filter(topic => 
-                                topic.toLowerCase().includes(topicFilter.toLowerCase())
-                              )
-                              .map((topic, index) => (
-                                <motion.span 
-                                  key={index}
-                                  className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-full text-xs font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
-                                  onClick={() => {
-                                    setTopicFilter(topic);
-                                  }}
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ 
-                                    opacity: 1, 
-                                    scale: 1,
-                                    transition: {
-                                      delay: 0.1 + (index * 0.05),
-                                      duration: 0.3
-                                    }
-                                  }}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  {topic}
-                                </motion.span>
-                              ))}
-                            {documentKeyTopics.filter(topic => 
-                              topic.toLowerCase().includes(topicFilter.toLowerCase())
-                            ).length === 0 && (
-                              <motion.p 
-                                className="text-xs text-gray-500 dark:text-gray-400 py-1"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                              >
-                                No topics match your filter
-                              </motion.p>
-                            )}
-                            {topicFilter && (
-                              <motion.button
-                                onClick={() => setTopicFilter("")}
-                                className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline ml-2"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1, transition: { delay: 0.2 } }}
-                                whileHover={{ scale: 1.05 }}
-                              >
-                                Clear filter
-                              </motion.button>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-
-                {/* Document Content Section */}
-                <motion.div
-                  className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.4 }}
-                >
-                  <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
-                    <div className="flex items-center text-sm font-medium">
-                      <FileInput className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
-                      Document Content
-                    </div>
-                    <motion.button
-                      onClick={() => setIsCollapsed(!isCollapsed)}
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {isCollapsed ? (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <ChevronUp className="h-4 w-4 text-gray-500" />
-                      )}
-                    </motion.button>
-                  </div>
-                  <AnimatePresence>
-                    {!isCollapsed && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{
-                          height: "auto",
-                          opacity: 1,
-                          transition: {
-                            height: { duration: 0.4 },
-                            opacity: { duration: 0.3, delay: 0.1 },
-                          },
-                        }}
-                        exit={{
-                          height: 0,
-                          opacity: 0,
-                          transition: {
-                            height: { duration: 0.3 },
-                            opacity: { duration: 0.2 },
-                          },
-                        }}
-                        className="overflow-hidden"
-                      >
-                        <div className="whitespace-pre-wrap font-mono text-sm p-4 overflow-auto max-h-[60vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
-                          {documentContent}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
                 </>
               ) : (
                 <motion.div
@@ -580,9 +589,7 @@ export default function DocumentDataComponent({
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         Description
                       </span>
-                      <span className="text-sm mt-1">
-                        {doc.description}
-                      </span>
+                      <span className="text-sm mt-1">{doc.description}</span>
                     </motion.div>
                   )}
 
@@ -659,9 +666,7 @@ export default function DocumentDataComponent({
                     <span className="text-sm mt-1 flex items-center">
                       <span
                         className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                          doc.indexed
-                            ? "bg-green-500"
-                            : "bg-yellow-500"
+                          doc.indexed ? "bg-green-500" : "bg-yellow-500"
                         }`}
                       ></span>
                       {doc.indexStatus}

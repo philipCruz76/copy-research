@@ -122,7 +122,9 @@ export default function DocumentsPage() {
   const filteredDocuments = documents.filter(
     (doc) =>
       doc.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      doc.documentData[0].keyTopics.some((topic) =>
+        topic.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
   );
 
   return (

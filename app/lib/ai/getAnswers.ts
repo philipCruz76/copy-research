@@ -8,7 +8,6 @@ import { generateChecksum, generateDocumentHash } from "@/app/lib/utils";
 import { getSignedURL } from "@/app/lib/storage";
 import db from "@/app/lib/db";
 import { getDocumentSummary } from "./getDocumentSummary";
-import { DocumentSummary } from "../types/documentUpload.types";
 
 export async function indexFileDocument(
   document: File,
@@ -96,7 +95,7 @@ export const loadUrlDocument = async (url: string) => {
       },
     });
 
-    const documentSummary = await getDocumentSummary(processedDoc);
+    const documentSummary = await getDocumentSummary(processedDoc.pageContent);
 
     const documentWithSummary = {
       ...processedDoc,

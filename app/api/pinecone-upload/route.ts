@@ -5,6 +5,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import db from "@/app/lib/db";
 import { DocumentType } from "@prisma/client";
 import { generateDocumentHash } from "@/app/lib/utils";
+import { getDocumentSummary } from "@/app/lib/ai/getDocumentSummary";
 
 type DocumentRequest = {
   text: string[];
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
     const { text, documentId, fileType, documentURL, checksum, documentTitle } =
       (await req.json()) as DocumentRequest;
 
+    const documentSummary = await getDocumentSummary(text.join(" "));
     let uniqueIds: string[] = [];
     const documents: Document[] = text.map((doc: string) => {
       return new Document({
@@ -26,10 +28,13 @@ export async function POST(req: Request) {
         metadata: {
           documentId,
           type: fileType,
+          summary: documentSummary.summary,
+          keyTopics: documentSummary.keyTopics,
         },
       });
     });
 
+    console.log("Documents: ", documents.length);
     // Add text splitter similar to loadDocumentsToDb
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
@@ -65,6 +70,8 @@ export async function POST(req: Request) {
             displayName: "Document Text",
             size: text.length,
             indexed: true,
+            summary: documentSummary.summary,
+            keyTopics: documentSummary.keyTopics,
           },
         },
       },

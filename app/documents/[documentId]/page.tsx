@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound, useRouter } from "next/navigation";
-import React, {  useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ArrowLeft,
   FileText,
@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { getDocumentById } from "@/app/lib/actions/getDocumentById";
 import useSWR from "swr";
-import { DocumentWithData } from "@/app/lib/types/documentUpload.types";
 
 type Props = {
   params: Promise<{
@@ -85,7 +84,10 @@ const SkeletonContentTab = () => (
       <div className="p-4">
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="h-6 w-16 bg-gray-200 dark:bg-zinc-700 rounded-full"></div>
+            <div
+              key={index}
+              className="h-6 w-16 bg-gray-200 dark:bg-zinc-700 rounded-full"
+            ></div>
           ))}
         </div>
       </div>
@@ -126,7 +128,10 @@ const SkeletonDetailsTab = () => (
           <div className="h-3 w-20 bg-gray-200 dark:bg-zinc-700 rounded mb-1"></div>
           <div className="flex flex-wrap gap-2 mt-2">
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-5 w-16 bg-gray-200 dark:bg-zinc-700 rounded-full"></div>
+              <div
+                key={index}
+                className="h-5 w-16 bg-gray-200 dark:bg-zinc-700 rounded-full"
+              ></div>
             ))}
           </div>
         </div>
@@ -147,7 +152,7 @@ export default function DocumentPage({ params }: Props) {
   // Use SWR for data fetching with caching
   const fetcher = useCallback(async (id: string) => {
     const doc = await getDocumentById(id);
-    return doc; 
+    return doc;
   }, []);
 
   const {
@@ -312,115 +317,122 @@ export default function DocumentPage({ params }: Props) {
                   <div className="h-full overflow-auto">
                     {document.documentData ? (
                       <>
-                      {/* Summary */}
-                      <div className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4">
-                        <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
-                          <div className="flex items-center text-sm font-medium">
-                            <BookOpen className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
-                            Document Summary
-                          </div>
-                          <button
-                            onClick={() => setIsSummaryCollapsed(!isSummaryCollapsed)}
-                            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
-                          >
-                            {isSummaryCollapsed ? (
-                              <ChevronDown className="h-4 w-4 text-gray-500" />
-                            ) : (
-                              <ChevronUp className="h-4 w-4 text-gray-500" />
-                            )}
-                          </button>
-                        </div>
-                        {!isSummaryCollapsed && (
-                          <div className="whitespace-pre-wrap text-sm p-4 overflow-auto max-h-[30vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
-                            {String(document.documentData[0].summary)}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Key Topics */}
-                      {document.documentData[0].keyTopics && document.documentData[0].keyTopics.length > 0 && (
+                        {/* Summary */}
                         <div className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4">
                           <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
                             <div className="flex items-center text-sm font-medium">
-                              <Tag className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
-                              Key Topics
+                              <BookOpen className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
+                              Document Summary
                             </div>
-                            <div className="relative flex items-center">
-                              <Search className="absolute left-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
-                              <input
-                                type="text"
-                                placeholder="Filter topics..."
-                                value={topicFilter}
-                                onChange={(e) => setTopicFilter(e.target.value)}
-                                className="py-1 pl-7 pr-2 text-xs rounded border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-300"
-                              />
-                            </div>
+                            <button
+                              onClick={() =>
+                                setIsSummaryCollapsed(!isSummaryCollapsed)
+                              }
+                              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                              {isSummaryCollapsed ? (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <ChevronUp className="h-4 w-4 text-gray-500" />
+                              )}
+                            </button>
                           </div>
-                          <div className="p-4">
-                            <div className="flex flex-wrap gap-2">
-                              {document.documentData[0].keyTopics
-                                .filter(topic => 
-                                  topic.toLowerCase().includes(topicFilter.toLowerCase())
-                                )
-                                .map((topic, index) => (
-                                  <span 
-                                    key={index}
-                                    className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-full text-xs font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
-                                    onClick={() => {
-                                      setTopicFilter(topic);
-                                    }}
-                                  >
-                                    {topic}
-                                  </span>
-                                ))}
-                                {document.documentData[0].keyTopics.filter(topic => 
-                                  topic.toLowerCase().includes(topicFilter.toLowerCase())
-                                ).length === 0 && (
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 py-1">
-                                    No topics match your filter
-                                  </p>
-                                )}
-                                {topicFilter && (
-                                  <button
-                                    onClick={() => setTopicFilter("")}
-                                    className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline ml-2"
-                                  >
-                                    Clear filter
-                                  </button>
-                                )}
+                          {!isSummaryCollapsed && (
+                            <div className="whitespace-pre-wrap text-sm p-4 overflow-auto max-h-[30vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
+                              {String(document.documentData[0].summary)}
                             </div>
-                          </div>
+                          )}
                         </div>
-                      )}
 
-                      {/* Content */}
-                      <div className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto">
-                        <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
-                          <div className="flex items-center text-sm font-medium">
-                            <FileInput className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
-                            Document Content
+                        {/* Key Topics */}
+                        {document.documentData[0].keyTopics &&
+                          document.documentData[0].keyTopics.length > 0 && (
+                            <div className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto mb-4">
+                              <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
+                                <div className="flex items-center text-sm font-medium">
+                                  <Tag className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
+                                  Key Topics
+                                </div>
+                                <div className="relative flex items-center">
+                                  <Search className="absolute left-2 h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                                  <input
+                                    type="text"
+                                    placeholder="Filter topics..."
+                                    value={topicFilter}
+                                    onChange={(e) =>
+                                      setTopicFilter(e.target.value)
+                                    }
+                                    className="py-1 pl-7 pr-2 text-xs rounded border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-300"
+                                  />
+                                </div>
+                              </div>
+                              <div className="p-4">
+                                <div className="flex flex-wrap gap-2">
+                                  {document.documentData[0].keyTopics
+                                    .filter((topic) =>
+                                      topic
+                                        .toLowerCase()
+                                        .includes(topicFilter.toLowerCase()),
+                                    )
+                                    .map((topic, index) => (
+                                      <span
+                                        key={index}
+                                        className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-full text-xs font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
+                                        onClick={() => {
+                                          setTopicFilter(topic);
+                                        }}
+                                      >
+                                        {topic}
+                                      </span>
+                                    ))}
+                                  {document.documentData[0].keyTopics.filter(
+                                    (topic) =>
+                                      topic
+                                        .toLowerCase()
+                                        .includes(topicFilter.toLowerCase()),
+                                  ).length === 0 && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 py-1">
+                                      No topics match your filter
+                                    </p>
+                                  )}
+                                  {topicFilter && (
+                                    <button
+                                      onClick={() => setTopicFilter("")}
+                                      className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline ml-2"
+                                    >
+                                      Clear filter
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Content */}
+                        <div className="w-full bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-auto">
+                          <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800">
+                            <div className="flex items-center text-sm font-medium">
+                              <FileInput className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" />
+                              Document Content
+                            </div>
+                            <button
+                              onClick={() => setIsCollapsed(!isCollapsed)}
+                              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+                            >
+                              {isCollapsed ? (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <ChevronUp className="h-4 w-4 text-gray-500" />
+                              )}
+                            </button>
                           </div>
-                          <button
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
-                          >
-                            {isCollapsed ? (
-                              <ChevronDown className="h-4 w-4 text-gray-500" />
-                            ) : (
-                              <ChevronUp className="h-4 w-4 text-gray-500" />
-                            )}
-                          </button>
+                          {!isCollapsed && (
+                            <div className="whitespace-pre-wrap font-mono text-sm p-4 overflow-auto max-h-[60vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
+                              {String(document.documentData[0].data)}
+                            </div>
+                          )}
                         </div>
-                        {!isCollapsed && (
-                          <div className="whitespace-pre-wrap font-mono text-sm p-4 overflow-auto max-h-[60vh] bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200">
-                            {String(document.documentData[0].data)}
-                          </div>
-                        )}
-                      </div>
-
-                      
                       </>
-
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full py-12 text-center">
                         <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800">
@@ -514,23 +526,26 @@ export default function DocumentPage({ params }: Props) {
                           </span>
                         </div>
 
-                        {document.documentData[0]?.keyTopics && document.documentData[0].keyTopics.length > 0 && (
-                          <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Key Topics
-                            </span>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {document.documentData[0].keyTopics.map((topic, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-full text-xs font-medium"
-                                >
-                                  {topic}
-                                </span>
-                              ))}
+                        {document.documentData[0]?.keyTopics &&
+                          document.documentData[0].keyTopics.length > 0 && (
+                            <div className="flex flex-col">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                Key Topics
+                              </span>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {document.documentData[0].keyTopics.map(
+                                  (topic, index) => (
+                                    <span
+                                      key={index}
+                                      className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-full text-xs font-medium"
+                                    >
+                                      {topic}
+                                    </span>
+                                  ),
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     </div>
                   </div>

@@ -1,12 +1,11 @@
 "use server";
 
 import { generateObject } from "ai";
-import { Document } from "@langchain/core/documents";
 import { openai } from "@ai-sdk/openai";
 import { ChatMessage } from "../types/gpt.types";
 import { DocummentSummarySchema } from "../types/documentUpload.types";
 
-export async function getDocumentSummary(document: Document) {
+export async function getDocumentSummary(content: string) {
   const SYSTEM_PROMPT = `You are a highly skilled Document Summarizer. Your role is to read a document provided by the user and generate concise, accurate summaries that capture the key points and main ideas, using clear and professional language. You will also generate a list of key topics that are present in the document.
 
     RULES TO FOLLOW: 
@@ -34,7 +33,7 @@ export async function getDocumentSummary(document: Document) {
    Summarize the following text with extreme attention to dates and timelines.
 Double-check any years or dates you mention.
 IMPORTANT: Keep all relative dates (like "this year", "next month", "recent", etc.) EXACTLY as they appear in the original text. DO NOT convert them to absolute dates.
-    ${document.pageContent}
+    ${content}
     `;
 
   const EXAMPLE_DOCUMENT = `DolphinGemma will get its first test run this summer.
@@ -76,7 +75,7 @@ ${EXAMPLE_TOPICS}
     model: openai("gpt-4.1-nano"),
     messages,
     schema: DocummentSummarySchema,
-    maxTokens: 350,
+    maxTokens: 400,
     temperature: 0.1,
   });
 

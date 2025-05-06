@@ -30,6 +30,7 @@ const FileUploadModalDesktop = () => {
     handleSubmit,
     register,
     setValue,
+    unregister,
     trigger,
   } = useForm<FileUploadType>({
     mode: "onChange",
@@ -44,6 +45,9 @@ const FileUploadModalDesktop = () => {
       const result = await handleFileUpload(data.file, data.title);
       if (result.success) {
         toast.success(result.message);
+        setValue("title", "");
+        unregister("file");
+        trigger();
         setIsOpen(false);
       } else {
         toast.error(result.message);

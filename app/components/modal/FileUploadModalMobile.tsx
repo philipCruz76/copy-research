@@ -37,6 +37,7 @@ const FileUploadModalMobile = () => {
     handleSubmit,
     register,
     setValue,
+    unregister,
     trigger,
   } = useForm<FileUploadType>({
     mode: "onChange",
@@ -51,7 +52,9 @@ const FileUploadModalMobile = () => {
       const result = await handleFileUpload(data.file, data.title);
       if (result.success) {
         toast.success(result.message);
-
+        setValue("title", "");
+        unregister("file");
+        trigger();
         setIsOpen(false);
       } else {
         toast.error(result.message);
@@ -142,7 +145,7 @@ const FileUploadModalMobile = () => {
                 document.getElementById("mobileFileUpload")?.click()
               }
               className="w-full h-12 px-4 py-2 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading}
+              disabled={!isValid || isLoading}
               data-vaul-no-drag
             >
               {isLoading ? (
