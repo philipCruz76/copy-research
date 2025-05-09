@@ -8,6 +8,7 @@ import { generateChecksum, generateDocumentHash } from "@/app/lib/utils";
 import { getSignedURL } from "@/app/lib/storage";
 import db from "@/app/lib/db";
 import { getDocumentSummary } from "./getDocumentSummary";
+import { getCitationsForChunks } from "./store";
 
 export async function indexFileDocument(
   document: File,
@@ -142,3 +143,29 @@ export async function indexUrlDocument(docs: Document[], src: string) {
     return { success: false, message: "Error in URL upload" };
   }
 }
+
+// Add this new function to extract vector IDs from AI response metadata
+export const getCitationsForResponse = async (responseMetadata: any) => {
+  try {
+    // Extract source document IDs from the response metadata
+    // This assumes the AI response includes source document references
+    if (!responseMetadata || !responseMetadata.sourceDocuments) {
+      return [];
+    }
+    
+    // Extract all vector IDs from the source documents
+    const vectorIds = responseMetadata.sourceDocuments
+      .filter((doc: any) => doc && doc.metadata && doc.metadata.id)
+      .map((doc: any) => doc.metadata.id);
+      
+    if (vectorIds.length === 0) {
+      return [];
+    }
+    
+    // Get citations for all referenced vector IDs
+    return await getCitationsForChunks(vectorIds);
+  } catch (error) {
+    console.error("Error getting citations for response:", error);
+    return [];
+  }
+};

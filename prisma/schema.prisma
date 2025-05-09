@@ -37,6 +37,7 @@ model Document {
     details      Json?
     documentData DocumentData[]
     documentHashes DocumentHashes[]
+    chunks       DocumentChunk[]
 }
 
 model DocumentHashes {
@@ -58,6 +59,21 @@ model DocumentData {
     document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
     @@unique([documentId])
+}
+
+model DocumentChunk {
+    id          String   @id @default(cuid())
+    documentId  String
+    document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+    chunkIndex  Int
+    content     String   @db.Text
+    startChar   Int      @default(0)
+    endChar     Int      @default(0)
+    vectorId    String   // Store the ID used in the vector database
+    createdAt   DateTime @default(now())
+    
+    @@unique([documentId, chunkIndex])
+    @@index([vectorId])
 }
 
 model Content {

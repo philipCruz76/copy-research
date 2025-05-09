@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
     console.log("User question:", userQuestion);
 
-    const vectorDb = await getVectorDb("url-document");
+    const vectorDb = await getVectorDb();
 
     // Use the actual user question for the vector search with more results
     // and a higher similarity threshold to ensure relevance

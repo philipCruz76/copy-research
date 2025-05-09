@@ -44,14 +44,15 @@ export async function POST(req: Request) {
     const splitDocs = await splitter.splitDocuments(documents);
 
     // Generate unique IDs after splitting
-    uniqueIds = [];
-    splitDocs.forEach((doc) => {
+    splitDocs.forEach((doc, i) => {
       const contentHash = generateDocumentHash(doc);
       doc.metadata.id = `doc_${contentHash}`;
       uniqueIds.push(doc.metadata.id);
+      doc.metadata.chunkIndex = i;
+      doc.metadata.sourcePage = Math.floor(i / 10) + 1;
     });
 
-    const vectorStore = await getVectorDb("");
+    const vectorStore = await getVectorDb();
     await vectorStore.addDocuments(splitDocs, {
       ids: uniqueIds,
     });

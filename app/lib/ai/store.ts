@@ -1,6 +1,6 @@
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
-import { DocumentType } from "@prisma/client";
+import { DocumentChunk, DocumentType } from "@prisma/client";
 import { Document } from "@langchain/core/documents";
 import { embeddings } from "./gpt";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
@@ -67,23 +67,66 @@ export const loadDocumentsToDb = async (
     },
   });
 
+  console.log("Documents: ", documents[0].pageContent.length);
   // Split the documents into chunks
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
-    chunkOverlap: 100,
+    chunkOverlap: 0,
   });
 
   const splitDocs = await splitter.splitDocuments(documents);
 
   let uniqueIds: string[] = [];
-  splitDocs.forEach((doc) => {
+  const chunkCreations: Promise<DocumentChunk>[] = [];
+  
+  // Process each document chunk and track character positions
+  splitDocs.reduce((currentPosition, doc, i) => {
+    // Calculate position for this chunk
+    const startChar = currentPosition;
+    const endChar = currentPosition + doc.pageContent.length;
+    
     // Use a consistent ID generation scheme based on content
     const contentHash = generateDocumentHash(doc);
-    doc.metadata.id = `doc_${contentHash}`;
-    uniqueIds.push(doc.metadata.id);
-  });
+    const vectorId = `doc_${contentHash}`;
+    doc.metadata.id = vectorId;
+    uniqueIds.push(vectorId);
+    doc.metadata.chunkIndex = i;
+    doc.metadata.sourcePage = Math.floor(i / 10) + 1;
+    
+    // Add citation metadata
+    doc.metadata.documentTitle = docs[0].metadata.title;
+    doc.metadata.citation = {
+      documentId,
+      chunkIndex: i,
+      vectorId,
+      title: docs[0].metadata.title,
+      startChar,
+      endChar,
+      src,
+    };
+    
+    // Store chunk in database for citation lookup
+    const chunkCreation = db.documentChunk.create({
+      data: {
+        documentId,
+        chunkIndex: i,
+        content: doc.pageContent,
+        vectorId,
+        startChar,
+        endChar,
+      }
+    });
+    
+    chunkCreations.push(chunkCreation);
+    
+    // Return the next starting position
+    return endChar;
+  }, 0); // Start at position 0
+  
+  // Create all chunks in parallel
+  await Promise.all(chunkCreations);
 
-  const vectorStore = await getVectorDb("");
+  const vectorStore = await getVectorDb();
   await vectorStore.addDocuments(splitDocs, {
     ids: uniqueIds,
   });
@@ -91,7 +134,7 @@ export const loadDocumentsToDb = async (
   console.log("Documents loaded to db");
 };
 
-export const getVectorDb = async (documentId: string) => {
+export const getVectorDb = async () => {
   const index = getVectorStore();
   const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
     pineconeIndex: index,
@@ -100,4 +143,103 @@ export const getVectorDb = async (documentId: string) => {
   });
 
   return vectorStore;
+};
+
+// Function to retrieve citation information for a document chunk
+export const getCitationForChunk = async (vectorId: string) => {
+  // First try to get the chunk directly using the vectorId
+  const chunk = await db.documentChunk.findFirst({
+    where: {
+      vectorId,
+    },
+    include: {
+      document: {
+        select: {
+          title: true,
+          src: true,
+          documentType: true,
+          documentData: {
+            select: {
+              summary: true,
+              keyTopics: true,
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!chunk) {
+    return null;
+  }
+
+  return {
+    documentId: chunk.documentId,
+    chunkIndex: chunk.chunkIndex,
+    title: chunk.document.title || "Untitled Document",
+    src: chunk.document.src,
+    summary: chunk.document.documentData[0]?.summary,
+    keyTopics: chunk.document.documentData[0]?.keyTopics,
+    excerpt: chunk.content,
+    documentType: chunk.document.documentType,
+  };
+};
+
+// Function to retrieve citation information for multiple document chunks
+export const getCitationsForChunks = async (vectorIds: string[]) => {
+  // Get all chunks matching the provided vector IDs
+  const chunks = await db.documentChunk.findMany({
+    where: {
+      vectorId: {
+        in: vectorIds,
+      },
+    },
+    include: {
+      document: {
+        select: {
+          title: true,
+          src: true,
+          documentType: true,
+          documentData: {
+            select: {
+              summary: true,
+              keyTopics: true,
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!chunks || chunks.length === 0) {
+    return [];
+  }
+
+  // Group chunks by document to avoid duplicates
+  const citationsByDocument = new Map();
+  
+  chunks.forEach(chunk => {
+    const docId = chunk.documentId;
+    
+    if (!citationsByDocument.has(docId)) {
+      citationsByDocument.set(docId, {
+        documentId: docId,
+        title: chunk.document.title || "Untitled Document",
+        src: chunk.document.src,
+        summary: chunk.document.documentData[0]?.summary,
+        keyTopics: chunk.document.documentData[0]?.keyTopics,
+        documentType: chunk.document.documentType,
+        excerpts: []
+      });
+    }
+    
+    // Add this chunk's content as an excerpt
+    citationsByDocument.get(docId).excerpts.push({
+      chunkIndex: chunk.chunkIndex,
+      vectorId: chunk.vectorId,
+      content: chunk.content,
+    });
+  });
+
+  return Array.from(citationsByDocument.values());
 };
