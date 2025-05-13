@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SvgIcon from "./SvgIcon";
+import { useConversationStore } from "../lib/stores/conversation-store";
+import { getConversations } from "../lib/actions/conversation-actions";
+import { FullConversation } from "../lib/types/gpt.types";
+import ConversationHistory from "./ConversationHistory";
 
 interface SidebarProps {
   className?: string;
@@ -109,6 +113,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { conversations, setConversations } = useConversationStore();
 
   // Check if we're on mobile
   useEffect(() => {
@@ -125,6 +130,19 @@ export function Sidebar({ className }: SidebarProps) {
     return () => {
       window.removeEventListener("resize", checkMobile);
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const conversations: FullConversation[] = await getConversations();
+        setConversations(conversations);
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+      }
+    };
+
+    fetchConversations();
   }, []);
 
   const toggleSidebar = () => {
@@ -420,6 +438,11 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed}
             index={1}
           />
+          {conversations.length > 0 && !isCollapsed ? (
+            <div className="text-sm text-black font-semibold dark:text-white px-3 pt-2">
+              <ConversationHistory isCollapsed={isCollapsed} />
+            </div>
+          ) : null}
 
           <NavItem
             href="/documents"

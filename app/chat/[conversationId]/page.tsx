@@ -1,10 +1,18 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { ChatInput } from "../components/ChatInput";
-import { useEffect, useRef } from "react";
+import { ChatInput } from "../../components/ChatInput";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+import { Message } from "ai";
+import { useConversationStore } from "@/app/lib/stores/conversation-store";
 
 export default function ChatPage() {
+  const params = useParams();
+  const conversationId = params.conversationId as string;
+  const [isLoading, setIsLoading] = useState(true);
+  const { conversations } = useConversationStore();
+
   const {
     messages,
     setMessages,
@@ -16,11 +24,81 @@ export default function ChatPage() {
     stop,
   } = useChat({
     maxSteps: 5,
+    id: conversationId,
     // Only send last message to the server
     experimental_prepareRequestBody({ messages }) {
-      return { message: messages[messages.length - 1], id };
+      return { message: messages[messages.length - 1], id: conversationId };
     },
   });
+
+  // Load existing messages when the component mounts
+  useEffect(() => {
+    if (conversationId) {
+      try {
+        console.log("Current conversations in store:", conversations);
+        // Find the conversation in the store instead of loading from server
+        const conversation = conversations.find((c) => c.id === conversationId);
+
+        if (conversation) {
+          console.log("Found conversation:", conversation);
+          // Convert database messages to the format expected by useChat
+          const formattedMessages = conversation.messages.map((msg) => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant" | "system" | "data",
+            content: msg.content,
+            parts: [{ type: "text", text: msg.content }],
+          })) as Message[];
+
+          console.log("Formatted messages:", formattedMessages);
+          setMessages(formattedMessages);
+        } else {
+          console.log("No matching conversation found for ID:", conversationId);
+          // Fallback to loadChat if not found in store
+          const loadMessages = async () => {
+            try {
+              const loadedConversation = await import(
+                "@/app/lib/ai/loadChat"
+              ).then((module) => module.loadChat(conversationId));
+              console.log(
+                "Loaded conversation from server:",
+                loadedConversation,
+              );
+
+              if (loadedConversation) {
+                const formattedMessages = loadedConversation.messages.map(
+                  (msg) => ({
+                    id: msg.id,
+                    role: msg.role as "user" | "assistant" | "system" | "data",
+                    content: msg.content,
+                    parts: [{ type: "text", text: msg.content }],
+                  }),
+                ) as Message[];
+
+                console.log(
+                  "Formatted messages from server:",
+                  formattedMessages,
+                );
+                setMessages(formattedMessages);
+              }
+            } catch (error) {
+              console.error("Error loading messages from server:", error);
+            } finally {
+              setIsLoading(false);
+            }
+          };
+
+          loadMessages();
+          return; // Skip the remaining code in this branch
+        }
+      } catch (error) {
+        console.error("Error loading messages:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setIsLoading(false);
+    }
+  }, [conversationId, conversations, setMessages]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +110,14 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading chat...
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white relative">
       {/* Chat header - similar to ChatGPT */}
@@ -41,7 +127,7 @@ export default function ChatPage() {
           onClick={() => setMessages([])}
           className="text-xs px-2 py-1 rounded-md border border-black/10 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
         >
-          New Chat
+          Clear Chat
         </button>
       </header>
 
@@ -116,7 +202,7 @@ export default function ChatPage() {
       </div>
 
       {/* Fixed chat input at bottom */}
-      <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
+      <div className="absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
         <ChatInput
           chatId={id}
           input={input}

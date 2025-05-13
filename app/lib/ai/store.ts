@@ -78,13 +78,13 @@ export const loadDocumentsToDb = async (
 
   let uniqueIds: string[] = [];
   const chunkCreations: Promise<DocumentChunk>[] = [];
-  
+
   // Process each document chunk and track character positions
   splitDocs.reduce((currentPosition, doc, i) => {
     // Calculate position for this chunk
     const startChar = currentPosition;
     const endChar = currentPosition + doc.pageContent.length;
-    
+
     // Use a consistent ID generation scheme based on content
     const contentHash = generateDocumentHash(doc);
     const vectorId = `doc_${contentHash}`;
@@ -92,7 +92,7 @@ export const loadDocumentsToDb = async (
     uniqueIds.push(vectorId);
     doc.metadata.chunkIndex = i;
     doc.metadata.sourcePage = Math.floor(i / 10) + 1;
-    
+
     // Add citation metadata
     doc.metadata.documentTitle = docs[0].metadata.title;
     doc.metadata.citation = {
@@ -104,7 +104,7 @@ export const loadDocumentsToDb = async (
       endChar,
       src,
     };
-    
+
     // Store chunk in database for citation lookup
     const chunkCreation = db.documentChunk.create({
       data: {
@@ -114,15 +114,15 @@ export const loadDocumentsToDb = async (
         vectorId,
         startChar,
         endChar,
-      }
+      },
     });
-    
+
     chunkCreations.push(chunkCreation);
-    
+
     // Return the next starting position
     return endChar;
   }, 0); // Start at position 0
-  
+
   // Create all chunks in parallel
   await Promise.all(chunkCreations);
 
@@ -162,11 +162,11 @@ export const getCitationForChunk = async (vectorId: string) => {
             select: {
               summary: true,
               keyTopics: true,
-            }
-          }
-        }
-      }
-    }
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!chunk) {
@@ -204,11 +204,11 @@ export const getCitationsForChunks = async (vectorIds: string[]) => {
             select: {
               summary: true,
               keyTopics: true,
-            }
-          }
-        }
-      }
-    }
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!chunks || chunks.length === 0) {
@@ -217,10 +217,10 @@ export const getCitationsForChunks = async (vectorIds: string[]) => {
 
   // Group chunks by document to avoid duplicates
   const citationsByDocument = new Map();
-  
-  chunks.forEach(chunk => {
+
+  chunks.forEach((chunk) => {
     const docId = chunk.documentId;
-    
+
     if (!citationsByDocument.has(docId)) {
       citationsByDocument.set(docId, {
         documentId: docId,
@@ -229,10 +229,10 @@ export const getCitationsForChunks = async (vectorIds: string[]) => {
         summary: chunk.document.documentData[0]?.summary,
         keyTopics: chunk.document.documentData[0]?.keyTopics,
         documentType: chunk.document.documentType,
-        excerpts: []
+        excerpts: [],
       });
     }
-    
+
     // Add this chunk's content as an excerpt
     citationsByDocument.get(docId).excerpts.push({
       chunkIndex: chunk.chunkIndex,

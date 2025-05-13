@@ -2,7 +2,8 @@
 
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { ChatMessage } from "../types/gpt.types";
+import { GPTPrompt } from "../types/gpt.types";
+
 
 export async function generateNewsletter(blogContent: string) {
   const SYSTEM_PROMPT = `
@@ -37,7 +38,7 @@ export async function generateNewsletter(blogContent: string) {
     ${blogContent}
   `;
 
-  const messages: ChatMessage[] = [
+  const messages: GPTPrompt[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
   ];

@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
   try {
     console.log("Getting context from vector db");
-    const vectorDb = await getVectorDb("url-document");
+    const vectorDb = await getVectorDb();
 
     const context = await vectorDb.similaritySearch(topic, 3);
 

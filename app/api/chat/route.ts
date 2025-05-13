@@ -1,5 +1,10 @@
 import { getVectorDb } from "@/app/lib/ai/store";
-import { createDataStreamResponse, streamText } from "ai";
+import {
+  appendClientMessage,
+  appendResponseMessages,
+  createDataStreamResponse,
+  streamText,
+} from "ai";
 import { openai } from "@ai-sdk/openai";
 import { extractTextFromMessage } from "@/app/lib/utils";
 import { SYSTEM_PROMPT, USER_PROMPT } from "@/app/lib/ai/templates";
@@ -8,15 +13,47 @@ import {
   synthesizeQueryFrom,
 } from "@/app/lib/actions/search-actions";
 import { z } from "zod";
+import db from "@/app/lib/db";
+import { loadChat } from "@/app/lib/ai/loadChat";
+import { ChatMessage } from "@/app/lib/types/gpt.types";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { message, id } = await req.json();
 
   try {
     let userQuestion = "";
+
+    // Check if conversation exists, create it if it doesn't
+    let conversation = await db.conversation.findUnique({
+      where: { id },
+    });
+
+    if (!conversation) {
+      conversation = await db.conversation.create({
+        data: { id },
+      });
+    }
+
+    // Save the user message to the database
+    await db.message.create({
+      data: {
+        role: message.role,
+        content: message.content,
+        conversationId: id,
+      },
+    });
+
+    // load the previous messages from the server:
+    const previousMessages = (await loadChat(id)).messages as ChatMessage[];
+
+    // append the new message to the previous messages:
+    const messages = appendClientMessage({
+      messages: previousMessages,
+      message,
+    });
 
     if (Array.isArray(messages) && messages.length > 0) {
       // Find the last user message in the array
@@ -45,20 +82,37 @@ export async function POST(req: Request) {
 
     // Use the actual user question for the vector search with more results
     // and a higher similarity threshold to ensure relevance
-    const results = await vectorDb.similaritySearch(userQuestion, 4);
+    const results = await vectorDb.similaritySearchWithScore(userQuestion, 5);
 
+    results.map((result) => {
+      if (result[1] < 0.3) {
+        return null;
+      }
+      return result[0].pageContent;
+    });
     // Filter out any context that's too short to be useful and join the rest
     const userContext = results
-      .map((result) => result.pageContent)
+      .map((result) => result[0].pageContent)
       .filter((content) => content.length > 20) // Filter out very short snippets
       .join("\n\n"); // Add extra line breaks for better separation
 
     // If no relevant context was found
     if (!userContext || userContext.trim().length === 0) {
+      const noContextResponse = `Lamento, não tenho informação suficiente para responder a esta pergunta: "${userQuestion}"`;
+
+      // Save the assistant message to the database
+      await db.message.create({
+        data: {
+          role: "assistant",
+          content: noContextResponse,
+          conversationId: id,
+        },
+      });
+
       const response = createDataStreamResponse({
         execute(dataStream) {
           dataStream.writeData({
-            text: `Lamento, não tenho informação suficiente para responder a esta pergunta: "${userQuestion}"`,
+            text: noContextResponse,
           });
         },
       });
@@ -75,6 +129,36 @@ export async function POST(req: Request) {
           content: USER_PROMPT(userQuestion, userContext),
         },
       ],
+      async onFinish({ response }) {
+        const streamedMessages = appendResponseMessages({
+          messages,
+          responseMessages: response.messages,
+        });
+
+        // Only save the latest assistant response to the database
+        const assistantMessages = streamedMessages.filter(
+          (msg) => msg.role === "assistant",
+        );
+
+        if (assistantMessages.length > 0) {
+          const latestAssistantMessage =
+            assistantMessages[assistantMessages.length - 1];
+
+          await db.message.create({
+            data: {
+              role: latestAssistantMessage.role,
+              content: latestAssistantMessage.content as string,
+              conversationId: id,
+            },
+          });
+        }
+
+        // Update conversation updatedAt
+        await db.conversation.update({
+          where: { id },
+          data: { updatedAt: new Date() },
+        });
+      },
       tools: {
         search: {
           description:
@@ -99,6 +183,15 @@ export async function POST(req: Request) {
               )
               .join("\n\n");
 
+            // Record the search action in the database
+            await db.message.create({
+              data: {
+                role: "system",
+                content: `Search executed: ${query}`,
+                conversationId: id,
+              },
+            });
+
             const isPortuguese =
               userQuestion.match(/[áàâãéèêíïóôõöúüçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]/) !== null;
             if (isPortuguese) {
@@ -116,6 +209,6 @@ export async function POST(req: Request) {
     return result.toDataStreamResponse();
   } catch (error) {
     console.error(error);
-    return new Response("Error loading documents", { status: 500 });
+    return new Response("Error processing request", { status: 500 });
   }
 }

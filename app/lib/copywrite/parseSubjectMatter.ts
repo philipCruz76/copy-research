@@ -2,7 +2,7 @@
 
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { ChatMessage } from "../types/gpt.types";
+import { GPTPrompt } from "../types/gpt.types";
 
 export async function parseSubjectMatter(subject: string) {
   const SYSTEM_PROMPT = `Your role is to help out distill a  user input into a more specific and actionable topic that will be used to generate either a blog post or a newsletter.
@@ -27,7 +27,7 @@ export async function parseSubjectMatter(subject: string) {
         -Output:"Misinformation in Elections"
     `;
 
-  const messages: ChatMessage[] = [
+  const messages: GPTPrompt[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
     { role: "assistant", content: ASSISTANT_EXAMPLE },

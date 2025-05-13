@@ -2,7 +2,8 @@
 
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { ChatMessage } from "../types/gpt.types";
+import { GPTPrompt } from "../types/gpt.types";
+
 
 export async function generateImagePrompt(blogContent: string) {
   const SYSTEM_PROMPT = `You are a professional copywriter. You will be given the contents of a blog post and based on the contents you will generate a prompt to use in image generation. 
@@ -37,7 +38,7 @@ export async function generateImagePrompt(blogContent: string) {
 
   const USER_PROMPT = `Blog Content: ${blogContent}`;
 
-  const messages: ChatMessage[] = [
+  const messages: GPTPrompt[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
   ];

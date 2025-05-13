@@ -3,7 +3,7 @@
 import { generateText } from "ai";
 import { BLOG_POST_EXAMPLES } from "./examples";
 import { openai } from "@ai-sdk/openai";
-import { ChatMessage } from "../types/gpt.types";
+import { GPTPrompt } from "../types/gpt.types";
 
 const FORMAL_TONE_PARAMETERS =
   "Keep the writing tone professional and informative. Find the balance between technicality and engaging content.";
@@ -124,7 +124,7 @@ export async function generateBlogPost(
    4. You've maintained the same level of uncertainty or certainty as expressed in the source
    5. Any ambiguities or gaps in the source material remain acknowledged rather than filled with assumptions
   `;
-  const messages: ChatMessage[] = [
+  const messages: GPTPrompt[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
     { role: "assistant", content: ASSISTANT_PROMPT },

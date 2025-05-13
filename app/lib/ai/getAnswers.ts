@@ -152,16 +152,16 @@ export const getCitationsForResponse = async (responseMetadata: any) => {
     if (!responseMetadata || !responseMetadata.sourceDocuments) {
       return [];
     }
-    
+
     // Extract all vector IDs from the source documents
     const vectorIds = responseMetadata.sourceDocuments
       .filter((doc: any) => doc && doc.metadata && doc.metadata.id)
       .map((doc: any) => doc.metadata.id);
-      
+
     if (vectorIds.length === 0) {
       return [];
     }
-    
+
     // Get citations for all referenced vector IDs
     return await getCitationsForChunks(vectorIds);
   } catch (error) {
