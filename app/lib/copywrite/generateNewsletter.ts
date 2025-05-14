@@ -4,7 +4,6 @@ import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { GPTPrompt } from "../types/gpt.types";
 
-
 export async function generateNewsletter(blogContent: string) {
   const SYSTEM_PROMPT = `
     You are a professional copywriter specializing in converting blog posts into engaging newsletters. Your task is to transform the provided blog post into a concise, engaging newsletter format.

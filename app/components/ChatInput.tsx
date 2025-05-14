@@ -2,7 +2,7 @@
 
 import { Message } from "ai";
 import { useRef, useEffect, useState, useCallback, memo } from "react";
-import { useLocalStorage, useWindowSize } from "usehooks-ts";
+import { useWindowSize } from "usehooks-ts";
 import { Textarea } from "../lib/ui/Textarea";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
@@ -32,10 +32,6 @@ function PureChatInput({
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
-  const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-    "input",
-    "",
-  );
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 4000; // Set a reasonable character limit
   const { topic, detectTopic, isLoading: isTopicLoading } = useTopicDetection();
@@ -70,7 +66,6 @@ function PureChatInput({
     const currentInput = input;
 
     // Reset the UI immediately to improve the user experience
-    setLocalStorageInput("");
     resetHeight();
     setCharCount(0);
 
@@ -96,8 +91,12 @@ function PureChatInput({
         // Extract topic first
         await detectTopic(updatedMessages, chatId);
 
-        // Then submit the message to the chat
+        // Start the handleSubmit process
         handleSubmit();
+
+        // After topic is detected, redirect to the chat page
+        // Using window.location instead of redirect to allow handleSubmit to continue running
+        //window.location.href = `/chat/${chatId}`;
       } catch (error) {
         console.error("Error in processing:", error);
 
@@ -114,7 +113,7 @@ function PureChatInput({
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [handleSubmit, setLocalStorageInput, width, input, messages, detectTopic]);
+  }, [handleSubmit, width, input, messages, detectTopic]);
 
   useEffect(() => {
     if (textareaRef.current) {

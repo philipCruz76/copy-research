@@ -1,6 +1,5 @@
 import { Conversation } from "@prisma/client";
 
-
 export type GPTPrompt = {
   role: "system" | "user" | "assistant" | "data";
   content: string;

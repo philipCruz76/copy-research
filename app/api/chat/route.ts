@@ -1,4 +1,4 @@
-import { getVectorDb } from "@/app/lib/ai/store";
+import { getVectorDb, getCachedDocument} from "@/app/lib/ai/store";
 import {
   appendClientMessage,
   appendResponseMessages,
@@ -16,6 +16,8 @@ import { z } from "zod";
 import db from "@/app/lib/db";
 import { loadChat } from "@/app/lib/ai/loadChat";
 import { ChatMessage } from "@/app/lib/types/gpt.types";
+import { NextResponse } from "next/server";
+import { isFollowUpQuery } from "@/app/lib/ai/isFollowUpQuery";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -25,6 +27,8 @@ export async function POST(req: Request) {
 
   try {
     let userQuestion = "";
+    let isFollowUp = false;
+    let userContext = "";
 
     // Check if conversation exists, create it if it doesn't
     let conversation = await db.conversation.findUnique({
@@ -78,47 +82,88 @@ export async function POST(req: Request) {
 
     console.log("User question:", userQuestion);
 
-    const vectorDb = await getVectorDb();
-
-    // Use the actual user question for the vector search with more results
-    // and a higher similarity threshold to ensure relevance
-    const results = await vectorDb.similaritySearchWithScore(userQuestion, 5);
-
-    results.map((result) => {
-      if (result[1] < 0.3) {
-        return null;
-      }
-      return result[0].pageContent;
-    });
-    // Filter out any context that's too short to be useful and join the rest
-    const userContext = results
-      .map((result) => result[0].pageContent)
-      .filter((content) => content.length > 20) // Filter out very short snippets
-      .join("\n\n"); // Add extra line breaks for better separation
-
-    // If no relevant context was found
-    if (!userContext || userContext.trim().length === 0) {
-      const noContextResponse = `Lamento, não tenho informação suficiente para responder a esta pergunta: "${userQuestion}"`;
-
-      // Save the assistant message to the database
-      await db.message.create({
-        data: {
-          role: "assistant",
-          content: noContextResponse,
-          conversationId: id,
-        },
-      });
-
-      const response = createDataStreamResponse({
-        execute(dataStream) {
-          dataStream.writeData({
-            text: noContextResponse,
-          });
-        },
-      });
-      return response;
+    if (messages.length > 2) {
+      isFollowUp = await isFollowUpQuery(userQuestion, previousMessages);
     }
 
+    if (isFollowUp) {
+
+      console.log("Detected Follow-up question.")
+
+      const cachedDocument = await getCachedDocument(conversation.lastDocumentId!);
+      if(!cachedDocument){
+        console.log("No cached document found.")
+      }
+      userContext = cachedDocument?.documentData[0].data!
+    }
+
+    if (!isFollowUp) {
+      const vectorDb = await getVectorDb();
+
+      // Use the actual user question for the vector search with more results
+      // and a higher similarity threshold to ensure relevance
+      const results = await vectorDb.similaritySearchWithScore(userQuestion, 5);
+
+      results.map((result) => {
+        if (result[1] < 0.3) {
+          return null;
+        }
+        return result[0].pageContent;
+      });
+
+      // Retrieve the full document from the database or from the cache:
+      const documentId = results[0][0].metadata.documentId;
+      const document = await getCachedDocument(documentId);
+
+      await db.conversation.update({
+        where: {id},
+        data: {
+          lastDocumentId: documentId
+        }
+      })
+
+      if (!document) {
+        return NextResponse.json(
+          {
+            error: "Document not found",
+          },
+          { status: 404 },
+        );
+      }
+
+      // Filter out any context that's too short to be useful and join the rest
+       userContext = results
+        .map((result) => result[0].pageContent)
+        .filter((content) => content.length > 20) // Filter out very short snippets
+        .join("\n\n"); // Add extra line breaks for better separation
+
+      // If no relevant context was found
+      if (!userContext || userContext.trim().length === 0) {
+        const noContextResponse = `Lamento, não tenho informação suficiente para responder a esta pergunta: "${userQuestion}"`;
+
+        // Save the assistant message to the database
+        await db.message.create({
+          data: {
+            role: "assistant",
+            content: noContextResponse,
+            conversationId: id,
+          },
+        });
+
+        const response = createDataStreamResponse({
+          execute(dataStream) {
+            dataStream.writeData({
+              text: noContextResponse,
+            });
+          },
+        });
+        return response;
+      }
+    }
+
+    if (userContext === "") {
+      throw new Error("No user context found. Check implementation.");
+    }
     const result = await streamText({
       model: openai("gpt-4o-mini"),
       temperature: 0.2,

@@ -4,7 +4,6 @@ import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { GPTPrompt } from "../types/gpt.types";
 
-
 export async function generateSummary(blogContent: string) {
   const SYSTEM_PROMPT = `
     You are a professional copywriter specializing in creating concise summaries of blog posts. Your task is to transform the provided blog post into a brief, informative summary that captures the key points.
