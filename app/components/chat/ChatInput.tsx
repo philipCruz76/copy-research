@@ -8,6 +8,7 @@ import { cn } from "@/app/lib/utils";
 import { toast } from "sonner";
 import { useTopicDetection } from "@/app/lib/hooks/useTopicDetection";
 import { ChatMessage } from "@/app/lib/types/gpt.types";
+import { redirect, useRouter } from "next/navigation";
 
 interface ChatInputProps {
   chatId: string;
@@ -16,6 +17,7 @@ interface ChatInputProps {
   isLoading: boolean;
   stop: () => void;
   messages: Array<Message>;
+  status: "submitted" | "streaming" | "ready" | "error";
   handleSubmit: (event?: { preventDefault?: () => void }) => void;
   className?: string;
 }
@@ -27,6 +29,7 @@ function PureChatInput({
   isLoading,
   stop,
   messages,
+  status,
   handleSubmit,
   className,
 }: ChatInputProps) {
@@ -36,6 +39,7 @@ function PureChatInput({
   const MAX_CHARS = 4000; // Set a reasonable character limit
   const { topic, detectTopic, isLoading: isTopicLoading } = useTopicDetection();
   const [isProcessingTopic, setIsProcessingTopic] = useState(false);
+  const router = useRouter();
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -71,10 +75,10 @@ function PureChatInput({
 
     // Check if this submission will result in 1 or 3 messages
     // We add 1 to account for the message about to be added
-    const willBeFirstOrThirdMessage =
-      messages.length === 0 || messages.length === 2;
+    const willBeFirstOrFourthMessage =
+      messages.length === 0 || messages.length === 3;
 
-    if (willBeFirstOrThirdMessage) {
+    if (willBeFirstOrFourthMessage) {
       setIsProcessingTopic(true);
 
       try {
@@ -90,10 +94,11 @@ function PureChatInput({
 
         // Extract topic first
         await detectTopic(updatedMessages, chatId);
-
         // Start the handleSubmit process
         handleSubmit();
-
+        if (status === "ready") {
+          router.push(`/chat/${chatId}`);
+        }
         // After topic is detected, redirect to the chat page
         // Using window.location instead of redirect to allow handleSubmit to continue running
         //window.location.href = `/chat/${chatId}`;

@@ -36,22 +36,21 @@ export default function ChatPage() {
   useEffect(() => {
     if (conversationId) {
       try {
-        console.log("Current conversations in store:", conversations);
-        // Find the conversation in the store instead of loading from server
+        // Find the conversation in the store
         const conversation = conversations.find((c) => c.id === conversationId);
 
         if (conversation) {
-          console.log("Found conversation:", conversation);
-          // Convert database messages to the format expected by useChat
-          const formattedMessages = conversation.messages.map((msg) => ({
-            id: msg.id,
-            role: msg.role as "user" | "assistant" | "system" | "data",
-            content: msg.content,
-            parts: [{ type: "text", text: msg.content }],
-          })) as Message[];
+          if (conversation.messages) {
+            // Convert database messages to the format expected by useChat
+            const formattedMessages = conversation.messages.map((msg) => ({
+              id: msg.id,
+              role: msg.role as "user" | "assistant" | "system" | "data",
+              content: msg.content,
+              parts: [{ type: "text", text: msg.content }],
+            })) as Message[];
 
-          console.log("Formatted messages:", formattedMessages);
-          setMessages(formattedMessages);
+            setMessages(formattedMessages);
+          }
         } else {
           console.log("No matching conversation found for ID:", conversationId);
           // Fallback to loadChat if not found in store
@@ -199,6 +198,7 @@ export default function ChatPage() {
             input={input}
             setInput={setInput}
             isLoading={status === "streaming"}
+            status={status}
             handleSubmit={handleSubmit}
             stop={stop}
             messages={messages}

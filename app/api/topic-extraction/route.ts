@@ -13,8 +13,11 @@ export async function POST(req: Request) {
     // 1. Extract embeddings from messages
     const texts = messages.map((message: ChatMessage) => message.content);
 
+    {
+      /**   FUTURE IMPLEMENTATION
     const textEmbeddings = await embeddings.embedQuery(texts.join("\n"));
-
+   
+    
     // 2. Agglomerative clustering (optional - group by topics)
     const clustering = agnes(textEmbeddings, {
       method: "average",
@@ -29,7 +32,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const clusters = extractClusters(clustering, 0.4);
+   // const clusters = extractClusters(clustering, 0.4);
+  */
+    }
 
     // 4. Summarize the overall topic
     const conversationText = messages
@@ -40,8 +45,10 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: `Summarize the main topic of this conversation in one sentence. 
-            IMPORTANT:The topic should be 5 words or less. and a sentence, not a question!
+          content: `Summarize the main topic of this conversation in 5 words or less that will be used as a headline. 
+            IMPORTANT- NOTES:
+            1- The topic should be 5 words or less. and a sentence, not a question!
+            2- The topic should be in the style of an article headline.
             `,
         },
         { role: "user", content: conversationText },
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
         },
       });
     } else {
-      await db.conversation.update({
+      conversation = await db.conversation.update({
         where: { id },
         data: {
           title: mainTopic,
@@ -77,7 +84,7 @@ export async function POST(req: Request) {
     // 6. Return the main topic and clusters
     return NextResponse.json({
       mainTopic,
-      clusters,
+      conversation,
     });
   } catch (error: any) {
     console.error("Topic detection error:", error);

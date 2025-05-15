@@ -219,7 +219,10 @@ export async function POST(req: Request) {
               }
             });
             // Direct string content
-            const query = await synthesizeQueryFrom(chatContextArray);
+            const query = await synthesizeQueryFrom(
+              chatContextArray,
+              new Date().getFullYear(),
+            );
             const searchResults = await getSearchResults(query);
             // Format search results for the model to use
             const formattedResults = searchResults.pages

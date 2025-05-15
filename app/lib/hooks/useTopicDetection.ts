@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ChatMessage } from "@/app/lib/types/gpt.types";
+import { useConversationStore } from "@/app/lib/stores/conversation-store";
 
 export function useTopicDetection() {
   const [topic, setTopic] = useState<string | null>(null);
+  const { conversations, setConversations } = useConversationStore();
   const [isLoading, setIsLoading] = useState(false);
 
   async function detectTopic(messages: ChatMessage[], id: string) {
@@ -22,6 +24,8 @@ export function useTopicDetection() {
 
       const data = await res.json();
       setTopic(data.mainTopic);
+      const updatedConversations = [data.conversation, ...conversations];
+      setConversations(updatedConversations);
       return data.mainTopic;
     } catch (error) {
       console.error("Error detecting topic:", error);

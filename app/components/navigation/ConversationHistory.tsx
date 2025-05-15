@@ -70,7 +70,7 @@ export default function ConversationHistory({
   const handleDelete = async (conversationId: string) => {
     try {
       await deleteConversation(conversationId);
-      router.push("/chat");
+      window.location.href = "/chat";
     } catch (error) {
       toast.error("Failed to delete conversation");
     }
