@@ -113,7 +113,8 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { conversations, setConversations } = useConversationStore();
+  const { conversations, setConversations, setIsLoadingConversations } =
+    useConversationStore();
 
   // Check if we're on mobile
   useEffect(() => {
@@ -137,8 +138,11 @@ export function Sidebar({ className }: SidebarProps) {
       try {
         const conversations: FullConversation[] = await getConversations();
         setConversations(conversations);
+        setIsLoadingConversations(false);
       } catch (error) {
         console.error("Error fetching conversations:", error);
+      } finally {
+        setIsLoadingConversations(false);
       }
     };
 

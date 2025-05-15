@@ -6,12 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Message } from "ai";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
+import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
 
 export default function ChatPage() {
   const params = useParams();
   const conversationId = params.conversationId as string;
-  const [isLoading, setIsLoading] = useState(true);
-  const { conversations } = useConversationStore();
+  const { conversations, isLoadingConversations } = useConversationStore();
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
 
   const {
     messages,
@@ -82,8 +83,6 @@ export default function ChatPage() {
               }
             } catch (error) {
               console.error("Error loading messages from server:", error);
-            } finally {
-              setIsLoading(false);
             }
           };
 
@@ -92,11 +91,7 @@ export default function ChatPage() {
         }
       } catch (error) {
         console.error("Error loading messages:", error);
-      } finally {
-        setIsLoading(false);
       }
-    } else {
-      setIsLoading(false);
     }
   }, [conversationId, conversations, setMessages]);
 
@@ -110,12 +105,14 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading chat...
-      </div>
-    );
+  useEffect(() => {
+    if (!isLoadingConversations) {
+      setConversationsLoaded(true);
+    }
+  }, [conversations]);
+
+  if (!conversationsLoaded) {
+    return <ChatLoadingPage />;
   }
 
   return (
@@ -123,12 +120,6 @@ export default function ChatPage() {
       {/* Chat header - similar to ChatGPT */}
       <header className="sticky top-0 z-1 flex items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur p-2 mobile:p-4">
         <h1 className="text-lg font-semibold">Research Assistant</h1>
-        <button
-          onClick={() => setMessages([])}
-          className="text-xs px-2 py-1 rounded-md border border-black/10 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-        >
-          Clear Chat
-        </button>
       </header>
 
       {/* Messages container */}
@@ -201,18 +192,19 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Fixed chat input at bottom */}
-      <div className="absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
-        <ChatInput
-          chatId={id}
-          input={input}
-          setInput={setInput}
-          isLoading={status === "streaming"}
-          handleSubmit={handleSubmit}
-          stop={stop}
-          messages={messages}
-        />
-      </div>
+      {conversationsLoaded && (
+        <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
+          <ChatInput
+            chatId={id}
+            input={input}
+            setInput={setInput}
+            isLoading={status === "streaming"}
+            handleSubmit={handleSubmit}
+            stop={stop}
+            messages={messages}
+          />
+        </div>
+      )}
     </div>
   );
 }

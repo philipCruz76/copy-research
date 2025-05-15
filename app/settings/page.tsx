@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  User,
-  Bell,
-  Database,
-} from "lucide-react";
+import { User, Bell, Database } from "lucide-react";
 
 export default function SettingsPage() {
   return (

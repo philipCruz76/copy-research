@@ -1,29 +1,23 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { ChatInput } from "../components/chat/ChatInput";
+import { ChatInput } from "@/app/components/chat/ChatInput";
 import { useEffect, useRef, useState } from "react";
-import { ChatLimitPage } from "../components/chat/ChatLimitPage";
-import { useConversationStore } from "../lib/stores/conversation-store";
+import { ChatLimitPage } from "@/app/components/chat/ChatLimitPage";
+import { useConversationStore } from "@/app/lib/stores/conversation-store";
+import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
 
 export default function ChatPage() {
-  const {
-    messages,
-    setMessages,
-    handleSubmit,
-    input,
-    setInput,
-    status,
-    id,
-    stop,
-  } = useChat({
-    maxSteps: 5,
-    // Only send last message to the server
-    experimental_prepareRequestBody({ messages }) {
-      return { message: messages[messages.length - 1], id };
+  const { messages, handleSubmit, input, setInput, status, id, stop } = useChat(
+    {
+      maxSteps: 5,
+      // Only send last message to the server
+      experimental_prepareRequestBody({ messages }) {
+        return { message: messages[messages.length - 1], id };
+      },
     },
-  });
-  const { conversations } = useConversationStore();
+  );
+  const { conversations, isLoadingConversations } = useConversationStore();
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,12 +30,15 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(()=> {
-    if(conversations.length > 0) {
+  useEffect(() => {
+    if (isLoadingConversations === false) {
       setConversationsLoaded(true);
     }
-  },[conversations])
+  }, [conversations]);
 
+  if (!conversationsLoaded) {
+    return <ChatLoadingPage />;
+  }
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white relative">
       {conversations.length > 4 ? (
@@ -50,12 +47,6 @@ export default function ChatPage() {
         <>
           <header className="sticky top-0 z-1 flex items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur p-2 mobile:p-4">
             <h1 className="text-lg font-semibold">Research Assistant</h1>
-            <button
-              onClick={() => setMessages([])}
-              className="text-xs px-2 py-1 rounded-md border border-black/10 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              New Chat
-            </button>
           </header>
 
           <div className="flex-1 overflow-y-auto pb-32">
@@ -127,17 +118,19 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
-            <ChatInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              isLoading={status === "streaming"}
-              handleSubmit={handleSubmit}
-              stop={stop}
-              messages={messages}
-            />
-          </div>
+          {conversationsLoaded && (
+            <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
+              <ChatInput
+                chatId={id}
+                input={input}
+                setInput={setInput}
+                isLoading={status === "streaming"}
+                handleSubmit={handleSubmit}
+                stop={stop}
+                messages={messages}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

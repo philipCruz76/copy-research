@@ -1,4 +1,8 @@
-import { TavilySearchConfig, TavilySearchOptions, tavily } from "@/app/lib/search/tavily";
+import {
+  TavilySearchConfig,
+  TavilySearchOptions,
+  tavily,
+} from "@/app/lib/search/tavily";
 
 /** Supported search providers */
 export enum SearchProvider {

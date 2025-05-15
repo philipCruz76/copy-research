@@ -67,22 +67,6 @@ export default function ConversationHistory({
     {},
   );
 
-  // Function to toggle section expansion
-  const toggleSection = (section: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // Function to get conversation title
-  const getConversationTitle = (conversation: any) => {
-    // If title exists, use it
-    if (conversation.title) return conversation.title;
-
-    return `${conversation.id}`;
-  };
-
   const handleDelete = async (conversationId: string) => {
     try {
       await deleteConversation(conversationId);
@@ -97,8 +81,6 @@ export default function ConversationHistory({
       {Object.entries(groupedConversations).map(
         ([section, convs]: [string, any]) => (
           <div key={section} className="py-1">
-            
-
             <span className="text-sm font-semibold ">{section}</span>
             {expandedSections[section] && (
               <ul className=" space-y-2 ">
@@ -111,7 +93,7 @@ export default function ConversationHistory({
                       href={`/chat/${conversation.id}`}
                       className="block py-1 px-2 w-full"
                     >
-                      <div className="flex items-center justify-between group text-sm">
+                      <div className="flex items-center justify-between group font-medium text-sm">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger className="text-gray-700 dark:text-gray-300  text-nowrap overflow-hidden  group-hover:text-indigo-600 dark:group-hover:text-indigo-400">

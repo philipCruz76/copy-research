@@ -11,14 +11,13 @@ type ConversationState = {
   messages: ChatMessage[];
   currentTopicId: string | null;
   topicContexts: Record<string, TopicContext>;
-  isProcessing: boolean;
-
+  isLoadingConversations: boolean;
   setConversations: (conversations: FullConversation[]) => void;
   setMessages: (message: ChatMessage) => void;
   setCurrentTopic: (topicId: string | null) => void;
   updateTopicContext: (topicId: string, context: Partial<TopicContext>) => void;
   clearMessages: () => void;
-  setIsProcessing: (isProcessing: boolean) => void;
+  setIsLoadingConversations: (isLoadingConversations: boolean) => void;
 };
 
 export const useConversationStore = create<ConversationState>()((set) => ({
@@ -26,7 +25,7 @@ export const useConversationStore = create<ConversationState>()((set) => ({
   messages: [],
   currentTopicId: null,
   topicContexts: {},
-  isProcessing: false,
+  isLoadingConversations: true,
 
   setConversations: (conversations: FullConversation[]) =>
     set({ conversations }),
@@ -63,5 +62,6 @@ export const useConversationStore = create<ConversationState>()((set) => ({
       };
     }),
   clearMessages: () => set({ messages: [] }),
-  setIsProcessing: (isProcessing: boolean) => set({ isProcessing }),
+  setIsLoadingConversations: (isLoadingConversations: boolean) =>
+    set({ isLoadingConversations }),
 }));
