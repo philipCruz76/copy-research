@@ -4,7 +4,7 @@ import {
   ChatMessage,
   FullConversation,
   TopicContext,
-} from "../types/gpt.types";
+} from "@/app/lib/types/gpt.types";
 
 type ConversationState = {
   conversations: FullConversation[];

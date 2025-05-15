@@ -7,8 +7,8 @@ import { Document } from "@langchain/core/documents";
 import { generateChecksum, generateDocumentHash } from "@/app/lib/utils";
 import { getSignedURL } from "@/app/lib/storage";
 import db from "@/app/lib/db";
-import { getDocumentSummary } from "./getDocumentSummary";
-import { getCitationsForChunks } from "./store";
+import { getDocumentSummary } from "@/app/lib/ai/getDocumentSummary";
+import { getCitationsForChunks } from "@/app/lib/ai/store";
 
 export async function indexFileDocument(
   document: File,

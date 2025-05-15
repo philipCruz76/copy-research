@@ -6,13 +6,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../lib/ui/dropdown-menu";
-import { ChevronDown, ChevronUp, MoreHorizontal, Trash } from "lucide-react";
+} from "@/app/lib/ui/dropdown-menu";
+import { MoreHorizontal, Trash } from "lucide-react";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/app/lib/ui/tooltip";
 
 interface ConversationHistoryProps {
   isCollapsed?: boolean;
@@ -87,22 +93,13 @@ export default function ConversationHistory({
   };
 
   return (
-    <div className="pl-4 pr-1 text-sm w-full">
+    <div className="py-2 text-sm w-full">
       {Object.entries(groupedConversations).map(
         ([section, convs]: [string, any]) => (
           <div key={section} className="py-1">
-            <div
-              className="flex items-center justify-between cursor-pointer py-1 text-black  dark:text-white "
-              onClick={() => toggleSection(section)}
-            >
-              <span className="text-sm font-semibold ">{section}</span>
-              {expandedSections[section] ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </div>
+            
 
+            <span className="text-sm font-semibold ">{section}</span>
             {expandedSections[section] && (
               <ul className=" space-y-2 ">
                 {(convs as any[]).map((conversation) => (
@@ -115,15 +112,23 @@ export default function ConversationHistory({
                       className="block py-1 px-2 w-full"
                     >
                       <div className="flex items-center justify-between group text-sm">
-                        <span className="text-gray-700 dark:text-gray-300 truncate max-w-[85%] group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                          {getConversationTitle(conversation)}
-                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="text-gray-700 dark:text-gray-300  text-nowrap overflow-hidden  group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                              {conversation.title}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {conversation.title}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
                         <DropdownMenu>
                           <DropdownMenuTrigger
-                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+                            className="opacity-0 group-hover:opacity-100 focus:outline-none focus:opacity-100 data-[state=open]:opacity-100 p-1"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <MoreHorizontal className="w-4 h-4" />
+                            <MoreHorizontal className="w-[18px] h-[18px]" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="text-xs">
                             <DropdownMenuItem

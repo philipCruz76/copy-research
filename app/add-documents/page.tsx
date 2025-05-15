@@ -1,7 +1,7 @@
 "use client";
 
 import { Upload, Link as LinkIcon, Loader2, AlertCircle } from "lucide-react";
-import { cn, isValidURL } from "../lib/utils";
+import { cn, isValidURL } from "@/app/lib/utils";
 import { toast } from "sonner";
 import { lazy, useEffect, useState } from "react";
 import {

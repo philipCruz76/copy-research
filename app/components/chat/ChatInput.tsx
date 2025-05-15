@@ -3,11 +3,11 @@
 import { Message } from "ai";
 import { useRef, useEffect, useState, useCallback, memo } from "react";
 import { useWindowSize } from "usehooks-ts";
-import { Textarea } from "../lib/ui/Textarea";
-import { cn } from "../lib/utils";
+import { Textarea } from "@/app/lib/ui/Textarea";
+import { cn } from "@/app/lib/utils";
 import { toast } from "sonner";
-import { useTopicDetection } from "../lib/hooks/useTopicDetection";
-import { ChatMessage } from "../lib/types/gpt.types";
+import { useTopicDetection } from "@/app/lib/hooks/useTopicDetection";
+import { ChatMessage } from "@/app/lib/types/gpt.types";
 
 interface ChatInputProps {
   chatId: string;

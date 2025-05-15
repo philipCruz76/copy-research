@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Copy, Send, Loader, CameraIcon, PlusIcon } from "lucide-react";
+import { Copy, Send, Loader, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";

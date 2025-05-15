@@ -1,4 +1,4 @@
-import { ChatMessage } from "../types/gpt.types";
+import { ChatMessage } from "@/app/lib/types/gpt.types";
 import { embeddings } from "@/app/lib/ai/gpt";
 import similarity from "compute-cosine-similarity";
 

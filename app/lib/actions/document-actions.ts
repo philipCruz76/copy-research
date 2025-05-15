@@ -1,9 +1,9 @@
 "use server";
 
-import { indexUrlDocument, loadUrlDocument } from "../ai/getAnswers";
+import { indexUrlDocument, loadUrlDocument } from "@/app/lib/ai/getAnswers";
 import db from "@/app/lib/db";
-import { generateRandomFileName, generateChecksum } from "../utils";
-import { downloadDocument } from "../storage";
+import { generateRandomFileName, generateChecksum } from "@/app/lib/utils";
+import { downloadDocument } from "@/app/lib/storage";
 
 export async function processUrl(url: string) {
   try {

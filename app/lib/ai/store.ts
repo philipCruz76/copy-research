@@ -5,7 +5,7 @@ import { Document } from "@langchain/core/documents";
 import { Document as DbDocument } from "@prisma/client";
 import { embeddings } from "./gpt";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { generateDocumentHash, generateRandomFileName } from "../utils";
+import { generateDocumentHash, generateRandomFileName } from "@/app/lib/utils";
 import db from "@/app/lib/db";
 
 export const getVectorStore = () => {
@@ -315,8 +315,8 @@ export const getCachedDocument = async (
     include: { documentData: true },
   });
 
-  if(!document){
-    console.log("No document found in database.")
+  if (!document) {
+    console.log("No document found in database.");
   }
   // Store in cache if found
   if (document) {

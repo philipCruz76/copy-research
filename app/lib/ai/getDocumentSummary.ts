@@ -2,8 +2,8 @@
 
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { DocummentSummarySchema } from "../types/documentUpload.types";
-import { GPTPrompt } from "../types/gpt.types";
+import { DocummentSummarySchema } from "@/app/lib/types/documentUpload.types";
+import { GPTPrompt } from "@/app/lib/types/gpt.types";
 
 export async function getDocumentSummary(content: string) {
   const SYSTEM_PROMPT = `You are a highly skilled Document Summarizer. Your role is to read a document provided by the user and generate concise, accurate summaries that capture the key points and main ideas, using clear and professional language. You will also generate a list of key topics that are present in the document.

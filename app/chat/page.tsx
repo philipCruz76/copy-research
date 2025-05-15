@@ -1,8 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { ChatInput } from "../components/ChatInput";
-import { useEffect, useRef } from "react";
+import { ChatInput } from "../components/chat/ChatInput";
+import { useEffect, useRef, useState } from "react";
 import { ChatLimitPage } from "../components/chat/ChatLimitPage";
 import { useConversationStore } from "../lib/stores/conversation-store";
 
@@ -24,6 +24,7 @@ export default function ChatPage() {
     },
   });
   const { conversations } = useConversationStore();
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +35,12 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(()=> {
+    if(conversations.length > 0) {
+      setConversationsLoaded(true);
+    }
+  },[conversations])
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white relative">

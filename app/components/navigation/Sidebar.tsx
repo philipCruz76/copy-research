@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import SvgIcon from "./SvgIcon";
-import { useConversationStore } from "../lib/stores/conversation-store";
-import { getConversations } from "../lib/actions/conversation-actions";
-import { FullConversation } from "../lib/types/gpt.types";
-import ConversationHistory from "./ConversationHistory";
+import SvgIcon from "@/app/components/SvgIcon";
+import { useConversationStore } from "@/app/lib/stores/conversation-store";
+import { getConversations } from "@/app/lib/actions/conversation-actions";
+import { FullConversation } from "@/app/lib/types/gpt.types";
+import ConversationHistory from "@/app/components/navigation/ConversationHistory";
 
 interface SidebarProps {
   className?: string;

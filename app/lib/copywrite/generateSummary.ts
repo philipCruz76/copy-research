@@ -2,7 +2,7 @@
 
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { GPTPrompt } from "../types/gpt.types";
+import { GPTPrompt } from "@/app/lib/types/gpt.types";
 
 export async function generateSummary(blogContent: string) {
   const SYSTEM_PROMPT = `

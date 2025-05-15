@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChatMessage } from "../types/gpt.types";
+import { ChatMessage } from "@/app/lib/types/gpt.types";
 
 export function useTopicDetection() {
   const [topic, setTopic] = useState<string | null>(null);

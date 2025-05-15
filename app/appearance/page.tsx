@@ -9,10 +9,6 @@ export default function AppearancePage() {
   const [mounted, setMounted] = useState(false);
   const [showTimestamps, setShowTimestamps] = useState(false);
   const [useBubbles, setUseBubbles] = useState(true);
-  const [preferences, setPreferences] = useState({
-    showTimestamps: false,
-    useBubbles: true,
-  });
 
   // Avoid hydration mismatch by only showing UI after mount
   useEffect(() => {
@@ -24,7 +20,6 @@ export default function AppearancePage() {
       const parsed = JSON.parse(savedPreferences);
       setShowTimestamps(parsed.showTimestamps);
       setUseBubbles(parsed.useBubbles);
-      setPreferences(parsed);
     }
   }, []);
 
@@ -34,7 +29,6 @@ export default function AppearancePage() {
       useBubbles,
     };
     localStorage.setItem("chatPreferences", JSON.stringify(newPreferences));
-    setPreferences(newPreferences);
 
     // Show a toast or some feedback
     alert("Preferences saved successfully!");

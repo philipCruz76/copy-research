@@ -1,6 +1,6 @@
 "use server";
 
-import db from "../db";
+import db from "@/app/lib/db";
 
 export async function loadChat(id: string) {
   try {

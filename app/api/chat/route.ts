@@ -1,4 +1,4 @@
-import { getVectorDb, getCachedDocument} from "@/app/lib/ai/store";
+import { getVectorDb, getCachedDocument } from "@/app/lib/ai/store";
 import {
   appendClientMessage,
   appendResponseMessages,
@@ -87,14 +87,15 @@ export async function POST(req: Request) {
     }
 
     if (isFollowUp) {
+      console.log("Detected Follow-up question.");
 
-      console.log("Detected Follow-up question.")
-
-      const cachedDocument = await getCachedDocument(conversation.lastDocumentId!);
-      if(!cachedDocument){
-        console.log("No cached document found.")
+      const cachedDocument = await getCachedDocument(
+        conversation.lastDocumentId!,
+      );
+      if (!cachedDocument) {
+        console.log("No cached document found.");
       }
-      userContext = cachedDocument?.documentData[0].data!
+      userContext = cachedDocument?.documentData[0].data!;
     }
 
     if (!isFollowUp) {
@@ -116,11 +117,11 @@ export async function POST(req: Request) {
       const document = await getCachedDocument(documentId);
 
       await db.conversation.update({
-        where: {id},
+        where: { id },
         data: {
-          lastDocumentId: documentId
-        }
-      })
+          lastDocumentId: documentId,
+        },
+      });
 
       if (!document) {
         return NextResponse.json(
@@ -132,7 +133,7 @@ export async function POST(req: Request) {
       }
 
       // Filter out any context that's too short to be useful and join the rest
-       userContext = results
+      userContext = results
         .map((result) => result[0].pageContent)
         .filter((content) => content.length > 20) // Filter out very short snippets
         .join("\n\n"); // Add extra line breaks for better separation

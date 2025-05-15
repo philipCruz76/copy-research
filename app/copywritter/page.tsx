@@ -1,9 +1,9 @@
 "use client";
 
-import BlogGenOverview from "../components/content-gen/wizard/BlogGenOverview";
-import BlogGenPreview from "../components/content-gen/wizard/BlogGenPreview";
-import CopyWritingMobile from "../components/CopyWritingMobile";
-import { useBlogGenWizardStore } from "../lib/stores/blogGenWizard-store";
+import BlogGenOverview from "@/app/components/content-gen/wizard/BlogGenOverview";
+import BlogGenPreview from "@/app/components/content-gen/wizard/BlogGenPreview";
+import CopyWritingMobile from "@/app/components/CopyWritingMobile";
+import { useBlogGenWizardStore } from "@/app/lib/stores/blogGenWizard-store";
 
 export default function CopywritterPage() {
   const { step } = useBlogGenWizardStore();

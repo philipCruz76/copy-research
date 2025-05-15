@@ -1,7 +1,7 @@
 "use server";
 
 import db from "@/app/lib/db";
-import { ChatMessage, FullConversation } from "../types/gpt.types";
+import { ChatMessage, FullConversation } from "@/app/lib/types/gpt.types";
 
 /**
  * Creates a new conversation with it's initial message and redirects to its chat page

@@ -1,4 +1,4 @@
-import CopyWritingMobile from "../components/CopyWritingMobile";
+import CopyWritingMobile from "@/app/components/CopyWritingMobile";
 
 export default function CopywritterLayout({
   children,

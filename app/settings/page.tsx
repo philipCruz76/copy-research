@@ -1,11 +1,8 @@
 "use client";
 
 import {
-  Settings as SettingsIcon,
   User,
-  Key,
   Bell,
-  Shield,
   Database,
 } from "lucide-react";
 

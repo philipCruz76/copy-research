@@ -4,11 +4,11 @@ import { FileText, Upload, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DocumentDataComponent from "../components/documents/DocumentData";
-import DocumentInfoButtonMobile from "../components/documents/DocumentInfoButtonMobile";
-import DocumentInfoButtonDesktop from "../components/documents/DocumentInfoButtonDesktop";
-import { DocumentWithData } from "../lib/types/documentUpload.types";
-import { useDocumentSelection } from "../lib/stores/document-selection";
+import DocumentDataComponent from "@/app/components/documents/DocumentData";
+import DocumentInfoButtonMobile from "@/app/components/documents/DocumentInfoButtonMobile";
+import DocumentInfoButtonDesktop from "@/app/components/documents/DocumentInfoButtonDesktop";
+import { DocumentWithData } from "@/app/lib/types/documentUpload.types";
+import { useDocumentSelection } from "@/app/lib/stores/document-selection";
 import { useMediaQuery } from "react-responsive";
 import useSWR from "swr";
 
