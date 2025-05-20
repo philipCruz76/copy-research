@@ -17,7 +17,7 @@ import db from "@/app/lib/db";
 import { loadChat } from "@/app/lib/ai/loadChat";
 import { ChatMessage } from "@/app/lib/types/gpt.types";
 import { NextResponse } from "next/server";
-import { isFollowUpQuery } from "@/app/lib/ai/isFollowUpQuery";
+import { FollowUpResult, isFollowUpQuery } from "@/app/lib/ai/isFollowUpQuery";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -27,7 +27,11 @@ export async function POST(req: Request) {
 
   try {
     let userQuestion = "";
-    let isFollowUp = false;
+    let isFollowUp: FollowUpResult = {
+      isFollowUp: false,
+      confidence: 0,
+      reason: "",
+    };
     let userContext = "";
 
     // Check if conversation exists, create it if it doesn't
@@ -86,8 +90,9 @@ export async function POST(req: Request) {
       isFollowUp = await isFollowUpQuery(userQuestion, previousMessages);
     }
 
-    if (isFollowUp) {
+    if (isFollowUp.isFollowUp) {
       console.log("Detected Follow-up question.");
+      console.log("Confidence level: ", isFollowUp.confidence);
 
       const cachedDocument = await getCachedDocument(
         conversation.lastDocumentId!,
@@ -98,7 +103,7 @@ export async function POST(req: Request) {
       userContext = cachedDocument?.documentData[0].data!;
     }
 
-    if (!isFollowUp) {
+    if (!isFollowUp.isFollowUp) {
       const vectorDb = await getVectorDb();
 
       // Use the actual user question for the vector search with more results

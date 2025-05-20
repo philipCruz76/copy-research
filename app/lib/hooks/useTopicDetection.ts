@@ -24,8 +24,26 @@ export function useTopicDetection() {
 
       const data = await res.json();
       setTopic(data.mainTopic);
-      const updatedConversations = [data.conversation, ...conversations];
-      setConversations(updatedConversations);
+
+      // Find if this conversation already exists in the store
+      const conversationExists = conversations.some(
+        (conv) => conv.id === data.conversation.id,
+      );
+
+      if (conversationExists) {
+        // Update existing conversation instead of adding a new one
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === data.conversation.id
+            ? { ...conv, title: data.conversation.title }
+            : conv,
+        );
+        setConversations(updatedConversations);
+      } else {
+        // Add new conversation
+        const updatedConversations = [data.conversation, ...conversations];
+        setConversations(updatedConversations);
+      }
+
       return data.mainTopic;
     } catch (error) {
       console.error("Error detecting topic:", error);

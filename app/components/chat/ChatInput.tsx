@@ -8,7 +8,7 @@ import { cn } from "@/app/lib/utils";
 import { toast } from "sonner";
 import { useTopicDetection } from "@/app/lib/hooks/useTopicDetection";
 import { ChatMessage } from "@/app/lib/types/gpt.types";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface ChatInputProps {
   chatId: string;

@@ -124,7 +124,7 @@ export default function ChatPage() {
                 chatId={id}
                 input={input}
                 setInput={setInput}
-                isLoading={status === "streaming"}
+                isLoading={status === "submitted"}
                 status={status}
                 handleSubmit={handleSubmit}
                 stop={stop}
