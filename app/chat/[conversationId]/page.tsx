@@ -317,7 +317,14 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
-
+              {status === "submitted" && (
+                <div
+                  key={`message-submitted`}
+                  className="animate-pulse text-gray-500 dark:text-gray-400 "
+                >
+                  Thinking...
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           )}
