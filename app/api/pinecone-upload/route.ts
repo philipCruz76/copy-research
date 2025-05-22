@@ -3,7 +3,7 @@ import { Document } from "@langchain/core/documents";
 import { NextResponse } from "next/server";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import db from "@/app/lib/db";
-import { DocumentType } from "@prisma/client";
+import { DocumentChunk, DocumentType } from "@prisma/client";
 import { generateDocumentHash } from "@/app/lib/utils";
 import { getDocumentSummary } from "@/app/lib/ai/getDocumentSummary";
 
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
 
     const documentSummary = await getDocumentSummary(text.join(" "));
     let uniqueIds: string[] = [];
+    const chunkCreations: Promise<DocumentChunk>[] = [];
     const documents: Document[] = text.map((doc: string) => {
       return new Document({
         pageContent: doc,
@@ -43,21 +44,7 @@ export async function POST(req: Request) {
 
     const splitDocs = await splitter.splitDocuments(documents);
 
-    // Generate unique IDs after splitting
-    splitDocs.forEach((doc, i) => {
-      const contentHash = generateDocumentHash(doc);
-      doc.metadata.id = `doc_${contentHash}`;
-      uniqueIds.push(doc.metadata.id);
-      doc.metadata.chunkIndex = i;
-      doc.metadata.sourcePage = Math.floor(i / 10) + 1;
-    });
-
-    const vectorStore = await getVectorDb();
-    await vectorStore.addDocuments(splitDocs, {
-      ids: uniqueIds,
-    });
-    console.log("Documents added to Pinecone");
-
+    // Create the parent document first
     const dbDocument = await db.document.create({
       data: {
         src: documentURL,
@@ -82,14 +69,65 @@ export async function POST(req: Request) {
       throw new Error("Document not created in db");
     }
 
+    // Process each document chunk and track character positions
+    splitDocs.reduce((currentPosition, doc, i) => {
+      // Calculate position for this chunk
+      const startChar = currentPosition;
+      const endChar = currentPosition + doc.pageContent.length;
+
+      // Use a consistent ID generation scheme based on content
+      const contentHash = generateDocumentHash(doc);
+      const vectorId = `doc_${contentHash}`;
+      doc.metadata.id = vectorId;
+      uniqueIds.push(vectorId);
+      doc.metadata.chunkIndex = i;
+      doc.metadata.sourcePage = Math.floor(i / 10) + 1;
+
+      // Add citation metadata
+      doc.metadata.documentTitle = documentTitle;
+      doc.metadata.citation = {
+        documentId,
+        chunkIndex: i,
+        vectorId,
+        title: documentTitle,
+        startChar,
+        endChar,
+        src: documentURL,
+      };
+
+      // Store chunk in database for citation lookup
+      const chunkCreation = db.documentChunk.create({
+        data: {
+          documentId,
+          chunkIndex: i,
+          content: doc.pageContent,
+          vectorId,
+          startChar,
+          endChar,
+        },
+      });
+
+      chunkCreations.push(chunkCreation);
+
+      // Return the next starting position
+      return endChar;
+    }, 0); // Start at position 0
+
+    // Create all chunks in parallel
+    await Promise.all(chunkCreations);
+
+    const vectorStore = await getVectorDb();
+    await vectorStore.addDocuments(splitDocs, {
+      ids: uniqueIds,
+    });
+    console.log("Documents added to Pinecone");
+
     await db.documentHashes.create({
       data: {
         hash: checksum,
         documentId: documentId,
       },
     });
-
-    console.log("Document created in db", dbDocument);
 
     return NextResponse.json({
       success: true,

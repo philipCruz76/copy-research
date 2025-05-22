@@ -6,19 +6,41 @@ import { useEffect, useRef, useState } from "react";
 import { ChatLimitPage } from "@/app/components/chat/ChatLimitPage";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
+import { UIMessage } from "ai";
+
+interface Citation {
+  chunkId: string;
+  relevantText: string;
+  position: number;
+}
+
+interface CitedResponse {
+  answer: string;
+  citations: Citation[];
+}
 
 export default function ChatPage() {
-  const { messages, handleSubmit, input, setInput, status, id, stop } = useChat(
-    {
-      maxSteps: 5,
-      // Only send last message to the server
-      experimental_prepareRequestBody({ messages }) {
-        return { message: messages[messages.length - 1], id };
-      },
+  const {
+    messages,
+    handleSubmit,
+    input,
+    setInput,
+    status,
+    id,
+    stop,
+    setMessages,
+  } = useChat({
+    maxSteps: 5,
+    // Only send last message to the server
+    experimental_prepareRequestBody({ messages }) {
+      return { message: messages[messages.length - 1], id };
     },
-  );
+  });
   const { conversations, isLoadingConversations } = useConversationStore();
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [citedResponse, setCitedResponse] = useState<CitedResponse | null>(
+    null,
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

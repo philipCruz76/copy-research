@@ -1,4 +1,4 @@
-import { getCacheStats, clearExpiredCache } from "@/app/lib/ai/store";
+import { getCacheStats, clearExpiredCache } from "@/app/lib/ai/documentCache";
 import { NextResponse } from "next/server";
 
 // GET handler to retrieve cache statistics

@@ -3,6 +3,7 @@ import {
   appendClientMessage,
   appendResponseMessages,
   createDataStreamResponse,
+  Output,
   streamText,
 } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -15,7 +16,11 @@ import {
 import { z } from "zod";
 import db from "@/app/lib/db";
 import { loadChat } from "@/app/lib/ai/loadChat";
-import { ChatMessage } from "@/app/lib/types/gpt.types";
+import {
+  ChatMessage,
+  DocumentChunk,
+  responseSchema,
+} from "@/app/lib/types/gpt.types";
 import { NextResponse } from "next/server";
 import { FollowUpResult, isFollowUpQuery } from "@/app/lib/ai/isFollowUpQuery";
 
@@ -32,7 +37,7 @@ export async function POST(req: Request) {
       confidence: 0,
       reason: "",
     };
-    let userContext = "";
+    let userContext: DocumentChunk[] = [];
 
     // Check if conversation exists, create it if it doesn't
     let conversation = await db.conversation.findUnique({
@@ -99,8 +104,17 @@ export async function POST(req: Request) {
       );
       if (!cachedDocument) {
         console.log("No cached document found.");
+        return NextResponse.json(
+          {
+            error: "Document not found",
+          },
+          { status: 404 },
+        );
       }
-      userContext = cachedDocument?.documentData[0].data!;
+      userContext = cachedDocument.chunks.map((chunk) => ({
+        content: chunk.content,
+        chunkId: chunk.vectorId,
+      }));
     }
 
     if (!isFollowUp.isFollowUp) {
@@ -139,12 +153,16 @@ export async function POST(req: Request) {
 
       // Filter out any context that's too short to be useful and join the rest
       userContext = results
-        .map((result) => result[0].pageContent)
-        .filter((content) => content.length > 20) // Filter out very short snippets
-        .join("\n\n"); // Add extra line breaks for better separation
+        .map((result) => {
+          return {
+            content: result[0].pageContent,
+            chunkId: result[0].metadata.id,
+          };
+        })
+        .filter((chunk) => chunk.content.length > 20); // Filter out very short snippets
 
       // If no relevant context was found
-      if (!userContext || userContext.trim().length === 0) {
+      if (!userContext || userContext.length === 0) {
         const noContextResponse = `Lamento, não tenho informação suficiente para responder a esta pergunta: "${userQuestion}"`;
 
         // Save the assistant message to the database
@@ -167,17 +185,17 @@ export async function POST(req: Request) {
       }
     }
 
-    if (userContext === "") {
+    if (userContext.length === 0) {
       throw new Error("No user context found. Check implementation.");
     }
     const result = await streamText({
       model: openai("gpt-4o-mini"),
-      temperature: 0.2,
-      system: SYSTEM_PROMPT(new Date().getFullYear()),
+      temperature: 0.1,
+      system: SYSTEM_PROMPT(new Date().getFullYear(), userContext),
       messages: [
         {
           role: "user",
-          content: USER_PROMPT(userQuestion, userContext),
+          content: USER_PROMPT(userQuestion, new Date().getFullYear()),
         },
       ],
       async onFinish({ response }) {
@@ -210,6 +228,9 @@ export async function POST(req: Request) {
           data: { updatedAt: new Date() },
         });
       },
+      experimental_output: Output.object({
+        schema: responseSchema,
+      }),
       tools: {
         search: {
           description:
@@ -217,15 +238,21 @@ export async function POST(req: Request) {
           parameters: z.object({
             chatContext: z.array(z.string()).describe("The chat history"),
           }),
-          execute: async ({ chatContext }) => {
+          execute: async ({}) => {
+            {
+              /** Temporarily disabled to avoid irrelevant queries
+              // Get the chat context from the messages
             const chatContextArray = messages.map((message: any) => {
               if (typeof message.content === "string") {
                 return message.content;
               }
             });
+              */
+            }
+
             // Direct string content
             const query = await synthesizeQueryFrom(
-              chatContextArray,
+              messages[messages.length - 1].content,
               new Date().getFullYear(),
             );
             const searchResults = await getSearchResults(query);

@@ -126,7 +126,7 @@ export async function isFollowUpQuery(
   const confidence = Math.min(1, Math.max(0, evidence));
 
   return {
-    isFollowUp: confidence > 0.5, // Decision threshold
+    isFollowUp: confidence > 0.6, // Decision threshold
     confidence,
     reason: reason || "Insufficient follow-up indicators",
   };

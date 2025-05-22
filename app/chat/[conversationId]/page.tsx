@@ -1,18 +1,33 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
+import { useChat, useCompletion } from "@ai-sdk/react";
 import { ChatInput } from "../../components/chat/ChatInput";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Message } from "ai";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
+import { toast } from "sonner";
+import { useCitationsSidebarStore } from "@/app/lib/stores/citations-sidebar-store";
+import { Citation, CitedResponse } from "@/app/lib/types/citations.types";
+import CitationSidebar from "@/app/components/chat/CitationSidebar";
+import { getDocumentByChunkId } from "@/app/lib/actions/getDocumentByChunkId";
+
 
 export default function ChatPage() {
   const params = useParams();
   const conversationId = params.conversationId as string;
   const { conversations, isLoadingConversations } = useConversationStore();
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [citedResponse, setCitedResponse] = useState<CitedResponse | null>(null);
+  const {
+    isOpen,
+    citations,
+    setIsOpen,
+    setCitations,
+    setIsLoading,
+    setCitedDocument,
+  } = useCitationsSidebarStore();
 
   const {
     messages,
@@ -31,6 +46,39 @@ export default function ChatPage() {
       return { message: messages[messages.length - 1], id: conversationId };
     },
   });
+
+
+  const areCitationsEqual = useCallback(
+    (citations1: Citation[], citations2: Citation[]) => {
+      if (citations1.length !== citations2.length) return false;
+      return citations1.every(
+        (citation, index) =>
+          citation.chunkId === citations2[index].chunkId &&
+          citation.relevantText === citations2[index].relevantText &&
+          citation.position === citations2[index].position,
+      );
+    },
+    [],
+  );
+
+  const retriveCitationInfo = async (chunkId: string) => {
+    try {
+      setIsLoading(true);
+     
+      const document = await getDocumentByChunkId(chunkId);
+      if (!document) {
+        toast.error("Document not found");
+        return;
+      }
+      setCitedDocument(document);
+    
+    setIsLoading(false);
+    } catch (error) {
+      console.error("Error retriving citation info:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load existing messages when the component mounts
   useEffect(() => {
@@ -95,12 +143,19 @@ export default function ChatPage() {
   }, [conversationId, conversations, setMessages]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const extractChunkId = (
+    text: string,
+  ): { mainText: string; chunkIds: string[] } => {
+    const matches = [...text.matchAll(/\[(.*?)\]/g)];
+    const ids = matches.flatMap((m) => m[1].split(",").map((id) => id.trim()));
+    const mainText = text.slice(0, text.lastIndexOf("[")).trim();
+    return { mainText: mainText, chunkIds: ids };
   };
 
   useEffect(() => {
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
     scrollToBottom();
   }, [messages]);
 
@@ -152,6 +207,56 @@ export default function ChatPage() {
                     {message.parts.map((part, i) => {
                       switch (part.type) {
                         case "text":
+                          if (message.role === "assistant") {
+                            let messageWithCitations: CitedResponse;
+                            try {
+                              // Try to parse if it's a string, otherwise use as is
+                              messageWithCitations = typeof message.content === 'string' 
+                                ? JSON.parse(message.content)
+                                : message.content as CitedResponse;
+                            } catch (e) {
+                              console.error('Error parsing message content:', e);
+                              return (
+                                <div key={message.id} className="whitespace-pre-wrap">
+                                  {message.content}
+                                </div>
+                              );
+                            }
+                            const result = extractChunkId(
+                              messageWithCitations.answer,
+                            );
+
+                            return (
+                              <div
+                                key={message.id}
+                                className="whitespace-pre-wrap"
+                              >
+                                {result.mainText}
+                                {result.chunkIds.map((chunkId, index) => (
+                                  <button
+                                    key={`citation-${index}`}
+                                    className="p-[2px] rounded-md text-blue-500 hover:text-blue-900 hover:bg-blue-200 ml-2"
+                                    onClick={() => {
+                                      if (
+                                        !areCitationsEqual(
+                                          messageWithCitations.citations,
+                                          citations,
+                                        )
+                                      ) {
+                                        setCitations(
+                                          messageWithCitations.citations,
+                                        );
+                                        retriveCitationInfo(chunkId);
+                                      }
+                                      setIsOpen(true);
+                                    }}
+                                  >
+                                    [{index + 1}]
+                                  </button>
+                                ))}
+                              </div>
+                            );
+                          }
                           return (
                             <div
                               key={`${message.id}-${i}`}
@@ -166,7 +271,7 @@ export default function ChatPage() {
                               key={`${message.id}-${i}`}
                               className="italic text-gray-500 dark:text-gray-400"
                             >
-                              Searching for additional information...
+                              Searching for additional information... {i}
                             </div>
                           );
                         default:
@@ -176,7 +281,7 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
-              {status === "submitted" && (
+              {status === "streaming" && (
                 <div className="flex justify-start w-full">
                   <div className="max-w-[85%] px-[18px] py-[8px] text-black dark:text-white">
                     <div className="italic text-gray-500 dark:text-gray-400">
@@ -190,9 +295,9 @@ export default function ChatPage() {
           )}
         </div>
       </div>
-
+      {isOpen && <CitationSidebar />}
       {conversationsLoaded && (
-        <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-6 w-full z-1">
+        <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-2 w-full z-1">
           <ChatInput
             chatId={id}
             input={input}

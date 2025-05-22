@@ -160,7 +160,7 @@ function PureChatInput({
           value={input}
           onChange={handleInput}
           className={cn(
-            "min-h-[56px] max-h-[200px] py-3 pl-4 pr-14 w-full overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
+            "min-h-[80px] max-h-[200px] py-3 pl-4 pr-14 w-full overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
             className,
             charCount > MAX_CHARS && "border-red-500",
           )}
