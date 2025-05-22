@@ -1,7 +1,5 @@
 import { DocumentChunk } from "../types/gpt.types";
 
-
-
 export const SYSTEM_PROMPT = (currentYear: number, chunks: DocumentChunk[]) => {
   return `
         You are a helpful assistant that provides accurate answers based on the provided document chunks. 

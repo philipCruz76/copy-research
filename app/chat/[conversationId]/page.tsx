@@ -13,13 +13,14 @@ import { Citation, CitedResponse } from "@/app/lib/types/citations.types";
 import CitationSidebar from "@/app/components/chat/CitationSidebar";
 import { getDocumentByChunkId } from "@/app/lib/actions/getDocumentByChunkId";
 
-
 export default function ChatPage() {
   const params = useParams();
   const conversationId = params.conversationId as string;
   const { conversations, isLoadingConversations } = useConversationStore();
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
-  const [citedResponse, setCitedResponse] = useState<CitedResponse | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null,
+  );
   const {
     isOpen,
     citations,
@@ -47,7 +48,6 @@ export default function ChatPage() {
     },
   });
 
-
   const areCitationsEqual = useCallback(
     (citations1: Citation[], citations2: Citation[]) => {
       if (citations1.length !== citations2.length) return false;
@@ -64,15 +64,15 @@ export default function ChatPage() {
   const retriveCitationInfo = async (chunkId: string) => {
     try {
       setIsLoading(true);
-     
+
       const document = await getDocumentByChunkId(chunkId);
       if (!document) {
         toast.error("Document not found");
         return;
       }
       setCitedDocument(document);
-    
-    setIsLoading(false);
+
+      setIsLoading(false);
     } catch (error) {
       console.error("Error retriving citation info:", error);
     } finally {
@@ -165,6 +165,23 @@ export default function ChatPage() {
     }
   }, [conversations]);
 
+  useEffect(() => {
+    if (status === "streaming" && messages.length > 0) {
+      // Get the ID of the most recent assistant message
+      const lastAssistantMsgIndex = [...messages]
+        .reverse()
+        .findIndex((m) => m.role === "assistant");
+
+      if (lastAssistantMsgIndex !== -1) {
+        const msgId = messages[messages.length - 1 - lastAssistantMsgIndex].id;
+        setStreamingMessageId(msgId);
+      }
+    } else if (status !== "streaming") {
+      // Reset when streaming stops
+      setStreamingMessageId(null);
+    }
+  }, [status, messages]);
+
   if (!conversationsLoaded) {
     return <ChatLoadingPage />;
   }
@@ -208,16 +225,35 @@ export default function ChatPage() {
                       switch (part.type) {
                         case "text":
                           if (message.role === "assistant") {
+                            if (message.id === streamingMessageId) {
+                              return (
+                                <div
+                                  key={`${message.id}-streaming`}
+                                  className="whitespace-pre-wrap"
+                                >
+                                  <div className="animate-pulse italic text-gray-500 dark:text-gray-400">
+                                    Generating response...
+                                  </div>
+                                </div>
+                              );
+                            }
                             let messageWithCitations: CitedResponse;
                             try {
                               // Try to parse if it's a string, otherwise use as is
-                              messageWithCitations = typeof message.content === 'string' 
-                                ? JSON.parse(message.content)
-                                : message.content as CitedResponse;
+                              messageWithCitations =
+                                typeof message.content === "string"
+                                  ? JSON.parse(message.content)
+                                  : (message.content as CitedResponse);
                             } catch (e) {
-                              console.error('Error parsing message content:', e);
+                              console.error(
+                                "Error parsing message content:",
+                                e,
+                              );
                               return (
-                                <div key={message.id} className="whitespace-pre-wrap">
+                                <div
+                                  key={message.id}
+                                  className="whitespace-pre-wrap"
+                                >
                                   {message.content}
                                 </div>
                               );
@@ -268,10 +304,10 @@ export default function ChatPage() {
                         case "tool-invocation":
                           return (
                             <div
-                              key={`${message.id}-${i}`}
+                              key={`${message.id}-${i}-toolCall`}
                               className="italic text-gray-500 dark:text-gray-400"
                             >
-                              Searching for additional information... {i}
+                              Searching for additional information...
                             </div>
                           );
                         default:
@@ -281,15 +317,7 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
-              {status === "streaming" && (
-                <div className="flex justify-start w-full">
-                  <div className="max-w-[85%] px-[18px] py-[8px] text-black dark:text-white">
-                    <div className="italic text-gray-500 dark:text-gray-400">
-                      Thinking...
-                    </div>
-                  </div>
-                </div>
-              )}
+
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -302,7 +330,7 @@ export default function ChatPage() {
             chatId={id}
             input={input}
             setInput={setInput}
-            isLoading={status === "streaming"}
+            isLoading={status !== "ready"}
             status={status}
             handleSubmit={handleSubmit}
             stop={stop}

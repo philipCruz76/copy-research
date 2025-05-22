@@ -144,15 +144,20 @@ const CitationSidebar = () => {
                   </motion.h2>
                   {citedDocument?.src && (
                     <motion.p
-                      
                       className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-ellipsis overflow-hidden"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2, duration: 0.3 }}
                     >
-                      Source: <a href={citedDocument.src}
-                      target="_blank"
-                      rel="noopener noreferrer" className="text-blue-500 hover:text-blue-900">{isLoading ? "Loading..." : citedDocument.src}</a>
+                      Source:{" "}
+                      <a
+                        href={citedDocument.src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:text-blue-900"
+                      >
+                        {isLoading ? "Loading..." : citedDocument.src}
+                      </a>
                     </motion.p>
                   )}
                 </div>

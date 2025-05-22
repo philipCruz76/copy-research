@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import { ChatLimitPage } from "@/app/components/chat/ChatLimitPage";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
-import { UIMessage } from "ai";
 
 interface Citation {
   chunkId: string;
@@ -125,15 +124,7 @@ export default function ChatPage() {
                       </div>
                     </div>
                   ))}
-                  {status === "submitted" && (
-                    <div className="flex justify-start w-full">
-                      <div className="max-w-[85%] px-[18px] py-[8px] text-black dark:text-white">
-                        <div className="italic text-gray-500 dark:text-gray-400">
-                          Thinking...
-                        </div>
-                      </div>
-                    </div>
-                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
               )}
@@ -146,7 +137,7 @@ export default function ChatPage() {
                 chatId={id}
                 input={input}
                 setInput={setInput}
-                isLoading={status === "submitted"}
+                isLoading={status !== "ready"}
                 status={status}
                 handleSubmit={handleSubmit}
                 stop={stop}

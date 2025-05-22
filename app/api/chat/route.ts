@@ -284,7 +284,7 @@ export async function POST(req: Request) {
         },
       },
       toolChoice: "auto",
-      maxSteps: 2, // Limit to prevent search loops - just one tool use and then final answer
+      maxSteps: 3, // Limit to prevent search loops - just one tool use and then final answer
     });
 
     return result.toDataStreamResponse();
