@@ -1,91 +1,202 @@
-# AI Research Assistant
+<div align="center">
 
-A powerful AI-driven research assistant built with Next.js that helps you analyze documents, generate content, and conduct intelligent conversations with your data.
+# 🤖 AI Research Assistant
 
-## 🚀 Key Features
+*A powerful AI-driven research platform for document analysis, intelligent conversations, and content generation*
 
-### 📄 Document Processing & Analysis
-- **Multi-format Support**: Upload PDF, DOCX, TXT files or add content via web URLs
-- **Intelligent Summarization**: Automatic document summaries with key topic extraction
-- **Vector Storage**: Advanced semantic search using Pinecone for document retrieval
-- **Citation Support**: Precise citations with chunk-level references
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-00A67E?logo=openai)](https://openai.com/)
+[![Pinecone](https://img.shields.io/badge/Pinecone-Vector%20DB-6366f1)](https://www.pinecone.io/)
 
-### 🤖 Intelligent Chat Assistant
-- **Context-Aware Conversations**: Chat with your documents using advanced RAG (Retrieval-Augmented Generation)
-- **Follow-up Detection**: Smart detection of follow-up questions for better context continuity
-- **Web Search Integration**: Automatically searches the web when document context is insufficient
-- **Multi-language Support**: Supports both English and Portuguese (Portugal)
-- **Real-time Streaming**: Fast, streaming responses for better user experience
+[Live Demo](https://copy-research-delta.vercel.app/) · [Documentation](#-documentation) 
 
-### ✍️ AI Copywriting Tools
-- **Blog Post Generation**: Create professional blog posts from your documents
-- **Content Wizard**: Step-by-step content creation with preview functionality
-- **Customizable Output**: Adjust tone, audience, and keywords for targeted content
-- **Mobile Responsive**: Optimized interface for both desktop and mobile devices
+</div>
 
-### 🔧 Advanced AI Capabilities
-- **Semantic Similarity**: Uses cosine similarity for intelligent content matching
-- **Smart Query Synthesis**: Converts chat context into optimized search queries
-- **Document Embeddings**: Advanced text embeddings for superior search accuracy
+---
+
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Getting Started](#-getting-started)
+- [Usage](#-usage)
+- [API Reference](#-api-reference)
+- [Architecture](#-architecture)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Support](#-support)
+
+## 🎯 Overview
+
+AI Research Assistant is a comprehensive platform that transforms how you interact with documents and information. Built with cutting-edge AI technologies, it enables intelligent document analysis, semantic search, and automated content generation while maintaining enterprise-grade security and performance.
+
+### ✨ Why Choose AI Research Assistant?
+
+- **🚀 Lightning Fast**: Advanced vector search with fast response times 
+- **🌐 Multi-language**: Native support for English and Portuguese (Portugal)
+- **📱 Responsive**: Beautiful, mobile-first design that works everywhere
+- **🔄 Real-time**: Streaming responses for immediate feedback
+
+## 🌟 Key Features
+
+### 📄 Document Intelligence
+- **Multi-format Support** - Upload PDF, DOCX, TXT files or import web content via URLs
+- **Smart Summarization** - AI-powered document summaries with key topic extraction
+- **Citation Tracking** - Precise source attribution with chunk-level references
+- **Semantic Search** - Advanced RAG (Retrieval-Augmented Generation) with Pinecone
+
+### 💬 Intelligent Conversations
+- **Context-Aware Chat** - Natural conversations with your document knowledge base
+- **Follow-up Intelligence** - Smart detection and handling of related questions
+- **Web Search Integration** - Automatic web search when context is insufficient
+- **Streaming Responses** - Real-time answer generation for better UX
+
+### ✍️ Content Generation
+- **Professional Copywriting** - Generate high-quality blog posts and articles
+- **Content Wizard** - Step-by-step guided content creation process
+- **Customizable Output** - Adjust tone, audience, and style preferences
+- **Template Library** - Pre-built templates for common content types
+
+### 🔧 Advanced Capabilities
+- **Semantic Similarity** - Cosine similarity for intelligent content matching
+- **Smart Query Synthesis** - Convert conversations into optimized search queries
+- **Document Embeddings** - State-of-the-art text embeddings for superior accuracy
+- **Automated Citations** - Dynamic citation generation and verification
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **AI/ML**: OpenAI GPT models, LangChain, AI SDK
-- **Database**: Prisma ORM with PostgreSQL
-- **Vector Database**: Pinecone for semantic search
-- **Authentication**: NextAuth.js
-- **UI/UX**: Tailwind CSS, Radix UI, Framer Motion
-- **File Processing**: PDF parsing, web scraping with Cheerio
-- **Search**: Tavily API for web search integration
+<div align="center">
+
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript) |
+| **AI/ML** | ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-00A67E?logo=openai) ![LangChain](https://img.shields.io/badge/LangChain-Framework-green) ![AI SDK](https://img.shields.io/badge/AI_SDK-Vercel-black) |
+| **Database** | ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?logo=postgresql) ![Pinecone](https://img.shields.io/badge/Pinecone-Vector%20DB-6366f1) |
+| **Auth & APIs** | ![NextAuth](https://img.shields.io/badge/NextAuth.js-Authentication-purple) ![Tavily](https://img.shields.io/badge/Tavily-Search%20API-orange) |
+| **UI/UX** | ![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css) ![Radix UI](https://img.shields.io/badge/Radix_UI-Components-161618) ![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animation-0055FF) |
+
+</div>
 
 ## 🚀 Getting Started
 
+### Prerequisites
+
+Ensure you have the following installed:
+- **Node.js** 18.0 or later
+- **npm** or **yarn** package manager
+- **PostgreSQL** database (local or cloud)
+
+### Installation
+
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/your-username/copy-research.git
    cd copy-research
    ```
 
 2. **Install dependencies**
    ```bash
    npm install
+   # or
+   yarn install
    ```
 
-3. **Set up environment variables**
-   Create a `.env.local` file with your API keys:
-   ```
-   OPENAI_API_KEY=your_openai_key
-   PINECONE_API_KEY=your_pinecone_key
-   DATABASE_URL=your_database_url
-   TAVILY_API_KEY=your_tavily_key
+3. **Environment Configuration**
+   
+   Create a `.env.local` file in the root directory:
+   ```env
+   # AI Configuration
+   OPENAI_API_KEY=your_openai_api_key
+   
+   # Vector Database
+   PINECONE_API_KEY=your_pinecone_api_key
+   PINECONE_ENVIRONMENT=your_pinecone_environment
+   
+   # Database
+   DATABASE_URL=your_postgresql_connection_string
+   
+   # Search Integration
+   TAVILY_API_KEY=your_tavily_api_key
+   
+   # Authentication
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret
+   
+   # AWS S3 (for file storage)
+   AWS_ACCESS_KEY_ID=your_aws_access_key
+   AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+   AWS_REGION=your_aws_region
+   AWS_S3_BUCKET=your_s3_bucket_name
    ```
 
-4. **Run the development server**
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run database migrations
+   npx prisma db push
+   ```
+
+5. **Start Development Server**
    ```bash
    npm run dev
+   # or
+   yarn dev
    ```
 
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+6. **Open Application**
+   
+   Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📖 Usage
 
-1. **Upload Documents**: Start by uploading your research documents or adding web URLs
-2. **Chat with Your Data**: Ask questions about your documents in natural language
-3. **Generate Content**: Use the copywriting tools to create blog posts and articles
-4. **Explore Insights**: Review document summaries and key topics automatically extracted
+### Quick Start Guide
 
-## 🔒 Privacy & Security
+1. **📁 Upload Documents**
+   - Click "Add Documents" in the dashboard
+   - Upload PDF, DOCX, or TXT files
+   - Or paste web URLs for automatic content extraction
 
-- Your documents are processed securely and stored with proper access controls
-- Vector embeddings ensure fast retrieval without compromising document integrity
-- All conversations and documents are associated with your session for privacy
+2. **💬 Start Chatting**
+   - Navigate to the chat interface
+   - Ask questions about your uploaded documents
+   - Get AI-powered answers with proper citations
 
-## 🤝 Contributing
+3. **✍️ Generate Content**
+   - Use the copywriting tools to create blog posts
+   - Leverage the content wizard for guided creation
+   - Customize tone, audience, and style preferences
 
-This project is built with modern web technologies and follows best practices for scalability and maintainability. Contributions are welcome!
+### Example Use Cases
+
+- **📚 Research Analysis**: Upload academic papers and get instant summaries
+- **📄 Document Q&A**: Ask specific questions about lengthy documents
+- **✍️ Content Creation**: Generate blog posts from your research materials
+- **🔍 Information Discovery**: Find relevant information across multiple documents
+
+
+### Key Components
+
+- **Frontend**: Next.js 15 with React 19 and TypeScript
+- **API Layer**: RESTful endpoints with streaming support
+- **AI Engine**: OpenAI GPT-4 with LangChain orchestration
+- **Vector Store**: Pinecone for semantic search and retrieval
+- **Database**: PostgreSQL with Prisma ORM for relational data
+- **File Processing**: Multi-format document parsing and chunking
+
 
 ## 📄 License
 
-This project is for research and educational purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**[⬆ Back to Top](#-ai-research-assistant)**
+
+</div>
