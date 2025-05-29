@@ -9,10 +9,6 @@ export default function AppearancePage() {
   const [mounted, setMounted] = useState(false);
   const [showTimestamps, setShowTimestamps] = useState(false);
   const [useBubbles, setUseBubbles] = useState(true);
-  const [preferences, setPreferences] = useState({
-    showTimestamps: false,
-    useBubbles: true,
-  });
 
   // Avoid hydration mismatch by only showing UI after mount
   useEffect(() => {
@@ -24,7 +20,6 @@ export default function AppearancePage() {
       const parsed = JSON.parse(savedPreferences);
       setShowTimestamps(parsed.showTimestamps);
       setUseBubbles(parsed.useBubbles);
-      setPreferences(parsed);
     }
   }, []);
 
@@ -34,7 +29,6 @@ export default function AppearancePage() {
       useBubbles,
     };
     localStorage.setItem("chatPreferences", JSON.stringify(newPreferences));
-    setPreferences(newPreferences);
 
     // Show a toast or some feedback
     alert("Preferences saved successfully!");
@@ -134,51 +128,6 @@ export default function AppearancePage() {
             <div className="h-24 relative rounded-md overflow-hidden">
               <div className="absolute top-0 left-0 w-1/2 h-full bg-gray-100 border-t border-l border-b border-gray-200"></div>
               <div className="absolute top-0 right-0 w-1/2 h-full bg-zinc-900 border-t border-r border-b border-zinc-800"></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-lg font-medium mb-4">Chat Display</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Show Timestamps</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Display time for each message
-                </p>
-              </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="timestamps"
-                  className="sr-only peer"
-                  checked={showTimestamps}
-                  onChange={(e) => setShowTimestamps(e.target.checked)}
-                />
-                <div className="block h-6 bg-gray-300 dark:bg-zinc-700 rounded-full w-12 peer-checked:bg-blue-600"></div>
-                <div className="absolute left-1 top-1 h-4 w-4 bg-white rounded-full transition-all peer-checked:left-7"></div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">Chat Bubbles</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Use bubble style for messages
-                </p>
-              </div>
-              <div className="relative inline-block w-12 align-middle select-none">
-                <input
-                  type="checkbox"
-                  id="bubbles"
-                  className="sr-only peer"
-                  checked={useBubbles}
-                  onChange={(e) => setUseBubbles(e.target.checked)}
-                />
-                <div className="block h-6 bg-gray-300 dark:bg-zinc-700 rounded-full w-12 peer-checked:bg-blue-600"></div>
-                <div className="absolute left-1 top-1 h-4 w-4 bg-white rounded-full transition-all peer-checked:left-7"></div>
-              </div>
             </div>
           </div>
         </div>

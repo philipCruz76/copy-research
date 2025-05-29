@@ -1,4 +1,8 @@
-import { TavilySearchConfig, TavilySearchOptions, tavily } from "./tavily";
+import {
+  TavilySearchConfig,
+  TavilySearchOptions,
+  tavily,
+} from "@/app/lib/search/tavily";
 
 /** Supported search providers */
 export enum SearchProvider {
@@ -98,10 +102,10 @@ export class SearchClient<T extends SearchProvider> {
             content: item.content,
           })),
         };
-        default:
-            throw new Error(`Unsupported search provider: ${this.config.provider}`);
+      default:
+        throw new Error(`Unsupported search provider: ${this.config.provider}`);
     }
   }
 }
 
-export * from './tavily';
+export * from "./tavily";

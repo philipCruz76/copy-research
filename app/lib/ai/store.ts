@@ -1,13 +1,21 @@
+"use server";
+
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
-import { DocumentType } from "@prisma/client";
+import { DocumentChunk, DocumentData, DocumentType } from "@prisma/client";
 import { Document } from "@langchain/core/documents";
+import { Document as DbDocument } from "@prisma/client";
 import { embeddings } from "./gpt";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { generateDocumentHash } from "../utils";
+import { generateDocumentHash, generateRandomFileName } from "@/app/lib/utils";
 import db from "@/app/lib/db";
+import { getDocumentFromCache, storeDocumentInCache } from "./documentCache";
 
-export const getVectorStore = () => {
+export const getVectorStore = async () => {
+  if (typeof window !== "undefined") {
+    throw new Error("Pinecone client can only be used on the server side");
+  }
+
   console.log("Getting vector store...");
   const client = new PineconeClient({
     apiKey: process.env.PINECONE_API_KEY!,
@@ -18,25 +26,27 @@ export const getVectorStore = () => {
 };
 
 export const loadDocumentsToDb = async (
-  documentId: string,
+  src: string,
   docType: DocumentType,
   docs: Array<Document>,
 ) => {
   console.log("Loading documents to db...");
+  const documentId = await generateRandomFileName();
 
   const documents = docs.map(
     (doc) =>
       new Document({
         pageContent: doc.pageContent,
-        metadata: { ...doc.metadata, documentId, type: docType },
+        metadata: { ...doc.metadata, documentId, src, type: docType },
       }),
   );
 
   const dbDocument = await db.document.create({
     data: {
-      src: documentId,
-      documentType: DocumentType.URL,
+      src: src,
       id: documentId,
+      documentType: DocumentType.URL,
+      title: docs[0].metadata.title,
       indexed: true,
       documentData: {
         create: {
@@ -44,6 +54,8 @@ export const loadDocumentsToDb = async (
           displayName: "Document Text",
           size: documents.length,
           indexed: true,
+          summary: docs[0].metadata.summary,
+          keyTopics: docs[0].metadata.keyTopics,
         },
       },
     },
@@ -63,23 +75,66 @@ export const loadDocumentsToDb = async (
     },
   });
 
+  console.log("Documents: ", documents[0].pageContent.length);
   // Split the documents into chunks
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
-    chunkOverlap: 100,
+    chunkOverlap: 0,
   });
 
   const splitDocs = await splitter.splitDocuments(documents);
 
   let uniqueIds: string[] = [];
-  splitDocs.forEach((doc) => {
+  const chunkCreations: Promise<DocumentChunk>[] = [];
+
+  // Process each document chunk and track character positions
+  splitDocs.reduce((currentPosition, doc, i) => {
+    // Calculate position for this chunk
+    const startChar = currentPosition;
+    const endChar = currentPosition + doc.pageContent.length;
+
     // Use a consistent ID generation scheme based on content
     const contentHash = generateDocumentHash(doc);
-    doc.metadata.id = `doc_${contentHash}`;
-    uniqueIds.push(doc.metadata.id);
-  });
+    const vectorId = `doc_${contentHash}`;
+    doc.metadata.id = vectorId;
+    uniqueIds.push(vectorId);
+    doc.metadata.chunkIndex = i;
+    doc.metadata.sourcePage = Math.floor(i / 10) + 1;
 
-  const vectorStore = await getVectorDb("");
+    // Add citation metadata
+    doc.metadata.documentTitle = docs[0].metadata.title;
+    doc.metadata.citation = {
+      documentId,
+      chunkIndex: i,
+      vectorId,
+      title: docs[0].metadata.title,
+      startChar,
+      endChar,
+      src,
+    };
+
+    // Store chunk in database for citation lookup
+    const chunkCreation = db.documentChunk.create({
+      data: {
+        documentId,
+        chunkIndex: i,
+        content: doc.pageContent,
+        vectorId,
+        startChar,
+        endChar,
+      },
+    });
+
+    chunkCreations.push(chunkCreation);
+
+    // Return the next starting position
+    return endChar;
+  }, 0); // Start at position 0
+
+  // Create all chunks in parallel
+  await Promise.all(chunkCreations);
+
+  const vectorStore = await getVectorDb();
   await vectorStore.addDocuments(splitDocs, {
     ids: uniqueIds,
   });
@@ -87,8 +142,8 @@ export const loadDocumentsToDb = async (
   console.log("Documents loaded to db");
 };
 
-export const getVectorDb = async (documentId: string) => {
-  const index = getVectorStore();
+export const getVectorDb = async () => {
+  const index = await getVectorStore();
   const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
     pineconeIndex: index,
     maxConcurrency: 3,
@@ -96,4 +151,133 @@ export const getVectorDb = async (documentId: string) => {
   });
 
   return vectorStore;
+};
+
+// Function to retrieve citation information for a document chunk
+export const getCitationForChunk = async (vectorId: string) => {
+  // First try to get the chunk directly using the vectorId
+  const chunk = await db.documentChunk.findFirst({
+    where: {
+      vectorId,
+    },
+    include: {
+      document: {
+        select: {
+          title: true,
+          src: true,
+          documentType: true,
+          documentData: {
+            select: {
+              summary: true,
+              keyTopics: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!chunk) {
+    return null;
+  }
+
+  return {
+    documentId: chunk.documentId,
+    chunkIndex: chunk.chunkIndex,
+    title: chunk.document.title || "Untitled Document",
+    src: chunk.document.src,
+    summary: chunk.document.documentData[0]?.summary,
+    keyTopics: chunk.document.documentData[0]?.keyTopics,
+    excerpt: chunk.content,
+    documentType: chunk.document.documentType,
+  };
+};
+
+// Function to retrieve citation information for multiple document chunks
+export const getCitationsForChunks = async (vectorIds: string[]) => {
+  // Get all chunks matching the provided vector IDs
+  const chunks = await db.documentChunk.findMany({
+    where: {
+      vectorId: {
+        in: vectorIds,
+      },
+    },
+    include: {
+      document: {
+        select: {
+          title: true,
+          src: true,
+          documentType: true,
+          documentData: {
+            select: {
+              summary: true,
+              keyTopics: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!chunks || chunks.length === 0) {
+    return [];
+  }
+
+  // Group chunks by document to avoid duplicates
+  const citationsByDocument = new Map();
+
+  chunks.forEach((chunk) => {
+    const docId = chunk.documentId;
+
+    if (!citationsByDocument.has(docId)) {
+      citationsByDocument.set(docId, {
+        documentId: docId,
+        title: chunk.document.title || "Untitled Document",
+        src: chunk.document.src,
+        summary: chunk.document.documentData[0]?.summary,
+        keyTopics: chunk.document.documentData[0]?.keyTopics,
+        documentType: chunk.document.documentType,
+        excerpts: [],
+      });
+    }
+
+    // Add this chunk's content as an excerpt
+    citationsByDocument.get(docId).excerpts.push({
+      chunkIndex: chunk.chunkIndex,
+      vectorId: chunk.vectorId,
+      content: chunk.content,
+    });
+  });
+
+  return Array.from(citationsByDocument.values());
+};
+
+export const getCachedDocument = async (
+  documentId: string,
+  ttl: number = 5 * 60 * 1000,
+) => {
+  // Try to get from cache first
+  const cached = getDocumentFromCache(documentId);
+  if (cached) {
+    console.log("Cached document found:", cached.title);
+    return cached;
+  }
+
+  console.log("No cached document found. Retrieving from database...");
+  // If not in cache, retrieve from database
+  const document = await db.document.findUnique({
+    where: { id: documentId },
+    include: { chunks: true, documentData: true },
+  });
+
+  if (!document) {
+    console.log("No document found in database.");
+  }
+  // Store in cache if found
+  if (document) {
+    console.log("Document found in database. Storing in cache...");
+    storeDocumentInCache(documentId, document, ttl);
+  }
+
+  return document;
 };

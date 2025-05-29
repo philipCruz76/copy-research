@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { Sidebar } from "./components/Sidebar";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { Sidebar } from "@/app/components/navigation/Sidebar";
+import { ThemeProvider } from "@/app/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +18,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Copy Research",
   description: "AI Copywriting Tool for Insurance Agents",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
@@ -33,7 +39,9 @@ export default function RootLayout({
         <ThemeProvider>
           <div className="flex h-screen">
             <Sidebar />
-            <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">{children}</main>
+            <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">
+              {children}
+            </main>
           </div>
           <Toaster />
         </ThemeProvider>

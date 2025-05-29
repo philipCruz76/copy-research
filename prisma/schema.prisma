@@ -37,6 +37,7 @@ model Document {
     details      Json?
     documentData DocumentData[]
     documentHashes DocumentHashes[]
+    chunks       DocumentChunk[]
 }
 
 model DocumentHashes {
@@ -51,9 +52,59 @@ model DocumentData {
     displayName String?
     documentId  String
     data        String?  @db.Text
+    summary     String?  @db.Text
+    keyTopics   String[]
     size        Int      @default(0)
     indexed     Boolean  @default(false)
     document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
     @@unique([documentId])
+}
+
+model DocumentChunk {
+    id          String   @id @default(cuid())
+    documentId  String
+    document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+    chunkIndex  Int
+    content     String   @db.Text
+    startChar   Int      @default(0)
+    endChar     Int      @default(0)
+    vectorId    String   // Store the ID used in the vector database
+    createdAt   DateTime @default(now())
+    
+    @@unique([documentId, chunkIndex])
+    @@index([vectorId])
+}
+
+model Conversation {
+  id String @id @default(cuid())
+  title String?
+  userId String?
+  lastDocumentId String?
+  messages Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id String @id @default(cuid())
+  role String
+  createdAt DateTime @default(now())
+  content String @db.Text
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Content {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  topic          String
+  audience       String?
+  style          String?
+  keywords       String[]
+  originalBlog   String   @db.Text
+  derivedType    String?  // "Newsletter" or "Summary"
+  derivedContent String?  @db.Text
+  createdAt      DateTime @default(now())
 }

@@ -1,56 +1,45 @@
 "use client";
 
-import { CreateMessage, Message } from "ai";
-import {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  type Dispatch,
-  type SetStateAction,
-  type ChangeEvent,
-  memo,
-} from "react";
-import { useLocalStorage, useWindowSize } from "usehooks-ts";
-import { Textarea } from "./ui/Textarea";
-import { cn } from "../lib/utils";
+import { Message } from "ai";
+import { useRef, useEffect, useState, useCallback, memo } from "react";
+import { useWindowSize } from "usehooks-ts";
+import { Textarea } from "@/app/lib/ui/Textarea";
+import { cn } from "@/app/lib/utils";
 import { toast } from "sonner";
-
-type SearchMode = "search" | "deepResearch";
+import { useTopicDetection } from "@/app/lib/hooks/useTopicDetection";
+import { ChatMessage } from "@/app/lib/types/gpt.types";
+import { useRouter } from "next/navigation";
 
 interface ChatInputProps {
+  chatId: string;
   input: string;
   setInput: (value: string) => void;
   isLoading: boolean;
   stop: () => void;
   messages: Array<Message>;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
-  append: (
-    message: Message | CreateMessage,
-  ) => Promise<string | null | undefined>;
+  status: "submitted" | "streaming" | "ready" | "error";
   handleSubmit: (event?: { preventDefault?: () => void }) => void;
   className?: string;
 }
 
 function PureChatInput({
+  chatId,
   input,
   setInput,
   isLoading,
   stop,
   messages,
-  setMessages,
-  append,
+  status,
   handleSubmit,
   className,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
-  const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-    "input",
-    "",
-  );
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 4000; // Set a reasonable character limit
+  const { topic, detectTopic, isLoading: isTopicLoading } = useTopicDetection();
+  const [isProcessingTopic, setIsProcessingTopic] = useState(false);
+  const router = useRouter();
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -74,18 +63,62 @@ function PureChatInput({
     adjustHeight();
   };
 
-  const submitForm = useCallback(() => {
+  const submitForm = useCallback(async () => {
     if (input.trim() === "") return; // Prevent empty submissions
 
-    handleSubmit();
-    setLocalStorageInput("");
+    // Store the current input before clearing it
+    const currentInput = input;
+
+    // Reset the UI immediately to improve the user experience
     resetHeight();
     setCharCount(0);
+
+    // Check if this submission will result in 1 or 3 messages
+    // We add 1 to account for the message about to be added
+    const willBeFirstOrFourthMessage =
+      messages.length === 0 || messages.length === 3;
+
+    if (willBeFirstOrFourthMessage) {
+      setIsProcessingTopic(true);
+
+      try {
+        // Create a copy of messages with the new message added
+        const updatedMessages: ChatMessage[] = [
+          ...(messages as ChatMessage[]),
+          {
+            id: `temp-${Date.now()}`,
+            role: "user",
+            content: currentInput,
+          },
+        ];
+
+        // Extract topic first
+        await detectTopic(updatedMessages, chatId);
+        // Start the handleSubmit process
+        handleSubmit();
+        if (status === "ready") {
+          router.push(`/chat/${chatId}`);
+        }
+        // After topic is detected, redirect to the chat page
+        // Using window.location instead of redirect to allow handleSubmit to continue running
+        //window.location.href = `/chat/${chatId}`;
+      } catch (error) {
+        console.error("Error in processing:", error);
+
+        // If topic extraction fails, still send the message
+        handleSubmit();
+      } finally {
+        setIsProcessingTopic(false);
+      }
+    } else {
+      // For other messages, just submit normally
+      handleSubmit();
+    }
 
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [handleSubmit, setLocalStorageInput, width, input]);
+  }, [handleSubmit, width, input, messages, detectTopic]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -98,16 +131,36 @@ function PureChatInput({
     setCharCount(input.length);
   }, [input]);
 
+  // Handle window resize to adjust textarea height
+  useEffect(() => {
+    const handleResize = () => {
+      if (textareaRef.current) {
+        adjustHeight();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div className="w-full px-2 py-2 sm:px-4 md:py-4 lg:px-6">
-      <div className="relative max-w-3xl mx-auto bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/20 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+    <div className=" gap-2 px-4 py-2 w-full desktop:py-4 tablet:py-4 desktop:max-w-3xl mx-auto ">
+      {topic && (
+        <div className="mb-2 text-sm text-center text-gray-500 dark:text-gray-400">
+          Current topic: {topic}{" "}
+          {(isTopicLoading || isProcessingTopic) && "..."}
+        </div>
+      )}
+      <div className="relative flex justify-center w-full bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/20 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]">
         <Textarea
           ref={textareaRef}
           placeholder="Message..."
           value={input}
           onChange={handleInput}
           className={cn(
-            "min-h-[56px] max-h-[200px] py-3 pl-4 pr-14 overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
+            "min-h-[80px] max-h-[200px] py-3 pl-4 pr-14 w-full overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
             className,
             charCount > MAX_CHARS && "border-red-500",
           )}
@@ -126,7 +179,7 @@ function PureChatInput({
               }
             }
           }}
-          disabled={isLoading}
+          disabled={isLoading || isProcessingTopic}
         />
 
         {/* Character counter */}
@@ -149,12 +202,12 @@ function PureChatInput({
               submitForm();
             }
           }}
-          disabled={isLoading && input.trim() === ""}
+          disabled={isLoading || isProcessingTopic}
           className={cn(
             "absolute right-2 bottom-2 p-1.5 rounded-lg transition-colors",
             input.trim() === ""
               ? "text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70"
-              : isLoading
+              : isLoading || isProcessingTopic
                 ? "text-red-500 hover:bg-gray-100 dark:hover:bg-zinc-700"
                 : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700",
           )}
@@ -215,7 +268,9 @@ function PureChatInput({
 }
 
 export const ChatInput = memo(PureChatInput, (prevProps, nextProps) => {
-  if (prevProps.input !== nextProps.input) return false;
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
-  return true;
+  // Both conditions must be false to re-render
+  return (
+    prevProps.input === nextProps.input &&
+    prevProps.isLoading === nextProps.isLoading
+  );
 });
