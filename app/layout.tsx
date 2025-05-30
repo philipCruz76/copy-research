@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { Sidebar } from "@/app/components/navigation/Sidebar";
 import { ThemeProvider } from "@/app/components/ThemeProvider";
+import ConditionalLayout from "@/app/components/ConditionalLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Copy Research",
-  description: "AI Copywriting Tool for Insurance Agents",
+  title: "AI Research Assistant",
+  description: "A powerful AI-driven research platform for document analysis, intelligent conversations, and content generation",
   viewport: {
     width: "device-width",
     initialScale: 1,
@@ -37,12 +37,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-zinc-900`}
       >
         <ThemeProvider>
-          <div className="flex h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">
-              {children}
-            </main>
-          </div>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
           <Toaster />
         </ThemeProvider>
       </body>

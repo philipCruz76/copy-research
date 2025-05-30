@@ -66,15 +66,6 @@ const SkeletonDocumentList = () => (
   </div>
 );
 
-const SkeletonSearchBar = () => (
-  <div className="relative mb-4 animate-pulse">
-    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-      <div className="h-4 w-4 bg-gray-200 dark:bg-zinc-700 rounded"></div>
-    </div>
-    <div className="w-full h-10 bg-gray-200 dark:bg-zinc-700 rounded-md"></div>
-  </div>
-);
-
 export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const {

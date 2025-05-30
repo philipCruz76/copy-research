@@ -266,18 +266,18 @@ export function Sidebar({ className }: SidebarProps) {
 
             {/* Logo/Header for Mobile */}
             <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex items-center">
-              <Link href="/dashboard" className="flex items-center">
+              <Link href="/" className="flex items-center">
                 <div className="w-8 h-8 mr-2 flex items-center justify-center rounded-md text-gray-700 dark:text-gray-300">
                   <SvgIcon
                     src="/icons/dashboard.svg"
-                    alt="Dashboard"
+                    alt="Home"
                     width={20}
                     height={20}
                     className="text-current"
                   />
                 </div>
                 <h1 className="text-lg font-semibold text-black dark:text-white">
-                  Dashboard
+                  Copy-Research
                 </h1>
               </Link>
             </div>
@@ -398,11 +398,11 @@ export function Sidebar({ className }: SidebarProps) {
 
         {/* Logo/Header */}
         <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex items-center">
-          <Link href="/dashboard" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <div className="w-8 h-8 mr-2 flex items-center justify-center rounded-md text-gray-700 dark:text-gray-300">
               <SvgIcon
                 src="/icons/dashboard.svg"
-                alt="Dashboard"
+                alt="Home"
                 width={20}
                 height={20}
                 className="text-current"
@@ -418,7 +418,7 @@ export function Sidebar({ className }: SidebarProps) {
                   exit="closed"
                   custom={0}
                 >
-                  Dashboard
+                  Copy-Research
                 </motion.h1>
               )}
             </AnimatePresence>
@@ -480,45 +480,10 @@ export function Sidebar({ className }: SidebarProps) {
             index={5}
           />
 
-          <NavItem
-            href="/settings"
-            icon="/icons/settings.svg"
-            text="Settings"
-            isCollapsed={isCollapsed}
-            index={6}
-          />
+          
         </nav>
 
-        {/* Footer Links */}
-        <div
-          className={`p-4 text-xs text-black dark:text-gray-400 ${isCollapsed ? "hidden" : "block"}`}
-        >
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                variants={itemVariants}
-                initial="closed"
-                animate="open"
-                exit="closed"
-              >
-                <Link
-                  href="/whats-new"
-                  className="block hover:text-indigo-500 transition-colors"
-                >
-                  What's new?
-                </Link>
-                <div className="flex flex-col mt-4 space-y-1">
-                  <Link
-                    href="/report-bug"
-                    className="hover:text-indigo-500 transition-colors"
-                  >
-                    Report a Bug
-                  </Link>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        
       </motion.div>
     </>
   );
