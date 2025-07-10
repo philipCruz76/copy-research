@@ -1,36 +1,53 @@
 import { getVectorDb, getCachedDocument } from "@/app/lib/ai/store";
 import {
-  appendClientMessage,
-  appendResponseMessages,
-  createDataStreamResponse,
+  AssistantModelMessage,
+  createTextStreamResponse,
   Output,
+  stepCountIs,
   streamText,
+  TextPart,
+  ToolModelMessage,
+  UIDataTypes,
+  UIMessage,
 } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { extractTextFromMessage } from "@/app/lib/utils";
 import { SYSTEM_PROMPT, USER_PROMPT } from "@/app/lib/ai/templates";
+import { z } from "zod";
+import db from "@/app/lib/db";
+import { loadChat } from "@/app/lib/ai/loadChat";
+import { DocumentChunk, responseSchema } from "@/app/lib/types/gpt.types";
+import { NextResponse } from "next/server";
+import { FollowUpResult, isFollowUpQuery } from "@/app/lib/ai/isFollowUpQuery";
+import { Conversation } from "@prisma/client";
+import { CitedResponse } from "@/app/lib/types/citations.types";
 import {
   getSearchResults,
   synthesizeQueryFrom,
 } from "@/app/lib/actions/search-actions";
-import { z } from "zod";
-import db from "@/app/lib/db";
-import { loadChat } from "@/app/lib/ai/loadChat";
-import {
-  ChatMessage,
-  DocumentChunk,
-  responseSchema,
-} from "@/app/lib/types/gpt.types";
-import { NextResponse } from "next/server";
-import { FollowUpResult, isFollowUpQuery } from "@/app/lib/ai/isFollowUpQuery";
-
+import { PageResult } from "@/app/lib/search/index";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
+export type StreamingToolCallResult = UIMessage<
+  never,
+  UIDataTypes,
+  {
+    runOnlineSearch: {
+      input: {
+        chatContext: string;
+      };
+      output: CitedResponse;
+    };
+  }
+>;
 export async function POST(req: Request) {
-  const { message, id } = await req.json();
-
+  const { message, id }: { message: UIMessage; id: string } = await req.json();
   try {
+    if (message.role !== "user") {
+      return new Response("Invalid message role", {
+        status: 400,
+      });
+    }
     let userQuestion = "";
     let isFollowUp: FollowUpResult = {
       isFollowUp: false,
@@ -38,9 +55,10 @@ export async function POST(req: Request) {
       reason: "",
     };
     let userContext: DocumentChunk[] = [];
+    let conversation: Conversation | null = null;
 
     // Check if conversation exists, create it if it doesn't
-    let conversation = await db.conversation.findUnique({
+    conversation = await db.conversation.findUnique({
       where: { id },
     });
 
@@ -54,26 +72,34 @@ export async function POST(req: Request) {
     await db.message.create({
       data: {
         role: message.role,
-        content: message.content,
+        content: message.parts.map((p: any) => p.text).join(" "),
         conversationId: id,
       },
     });
 
     // load the previous messages from the server:
-    const previousMessages = (await loadChat(id)).messages as ChatMessage[];
+    const previousMessages: UIMessage[] = (await loadChat(id)).messages.map(
+      (m) => ({
+        id: m.id,
+        role: m.role as "system" | "user" | "assistant",
+        parts: [
+          {
+            type: "text",
+            text: m.content,
+          },
+        ],
+      }),
+    );
 
     // append the new message to the previous messages:
-    const messages = appendClientMessage({
-      messages: previousMessages,
-      message,
-    });
+    const messages = [...previousMessages, message];
 
     if (Array.isArray(messages) && messages.length > 0) {
       // Find the last user message in the array
       for (let i = messages.length - 1; i >= 0; i--) {
         const message = messages[i];
         if (message.role === "user") {
-          userQuestion = extractTextFromMessage(message);
+          userQuestion = message.parts.map((p: any) => p.text).join(" ");
           if (userQuestion) break;
         }
       }
@@ -96,9 +122,6 @@ export async function POST(req: Request) {
     }
 
     if (isFollowUp.isFollowUp) {
-      console.log("Detected Follow-up question.");
-      console.log("Confidence level: ", isFollowUp.confidence);
-
       const cachedDocument = await getCachedDocument(
         conversation.lastDocumentId!,
       );
@@ -174,12 +197,13 @@ export async function POST(req: Request) {
           },
         });
 
-        const response = createDataStreamResponse({
-          execute(dataStream) {
-            dataStream.writeData({
-              text: noContextResponse,
-            });
-          },
+        const response = createTextStreamResponse({
+          textStream: new ReadableStream({
+            start(controller) {
+              controller.enqueue(noContextResponse);
+              controller.close();
+            },
+          }),
         });
         return response;
       }
@@ -189,9 +213,12 @@ export async function POST(req: Request) {
       throw new Error("No user context found. Check implementation.");
     }
     const result = await streamText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-4.1-nano"),
       temperature: 0.1,
       system: SYSTEM_PROMPT(new Date().getFullYear(), userContext),
+      stopWhen: stepCountIs(3), // Should be 2 steps: 1 tool call and 1 final answer
+      activeTools: ["runOnlineSearch"],
+      maxOutputTokens: 1000,
       messages: [
         {
           role: "user",
@@ -199,24 +226,29 @@ export async function POST(req: Request) {
         },
       ],
       async onFinish({ response }) {
-        const streamedMessages = appendResponseMessages({
-          messages,
-          responseMessages: response.messages,
-        });
-
-        // Only save the latest assistant response to the database
-        const assistantMessages = streamedMessages.filter(
-          (msg) => msg.role === "assistant",
+        const assistantMessages = response.messages.map(
+          (m: AssistantModelMessage | ToolModelMessage) => {
+            if (m.role === "assistant") {
+              return {
+                role: m.role,
+                content: m.content[0] as TextPart,
+              };
+            }
+          },
         );
 
         if (assistantMessages.length > 0) {
           const latestAssistantMessage =
             assistantMessages[assistantMessages.length - 1];
 
+          if (!latestAssistantMessage) {
+            throw new Error("No assistant message found");
+          }
+
           await db.message.create({
             data: {
-              role: latestAssistantMessage.role,
-              content: latestAssistantMessage.content as string,
+              role: latestAssistantMessage.role as "assistant",
+              content: latestAssistantMessage.content.text,
               conversationId: id,
             },
           });
@@ -232,62 +264,44 @@ export async function POST(req: Request) {
         schema: responseSchema,
       }),
       tools: {
-        search: {
+        runOnlineSearch: {
+          inputSchema: z.object({
+            chatContext: z.string(),
+          }),
           description:
             "Search the web for information not available in the provided context",
-          parameters: z.object({
-            chatContext: z.array(z.string()).describe("The chat history"),
-          }),
-          execute: async ({}) => {
-            {
-              /** Temporarily disabled to avoid irrelevant queries
-              // Get the chat context from the messages
-            const chatContextArray = messages.map((message: any) => {
-              if (typeof message.content === "string") {
-                return message.content;
-              }
-            });
-              */
-            }
-
-            // Direct string content
+          async execute({ chatContext }) {
             const query = await synthesizeQueryFrom(
-              messages[messages.length - 1].content,
+              messages[messages.length - 1].parts
+                .map((p: any) => p.text)
+                .join(" "),
               new Date().getFullYear(),
             );
             const searchResults = await getSearchResults(query);
             // Format search results for the model to use
-            const formattedResults = searchResults.pages
-              .map(
-                (page) =>
-                  `Source: ${page.title || "Web Search"}\n${page.content}`,
-              )
-              .join("\n\n");
-
+            const formattedResults = searchResults.pages;
             // Record the search action in the database
             await db.message.create({
               data: {
-                role: "system",
-                content: `Search executed: ${query}`,
+                role: "assistant",
+                content: `Search executed: ${query} \n\n ${searchResults.pages.map((result: PageResult) => `{ "title": "${result.title}", "url": "${result.url}", "favicon": "${result.favicon}"}`).join(",")}`,
                 conversationId: id,
               },
             });
 
-            const isPortuguese =
-              userQuestion.match(/[áàâãéèêíïóôõöúüçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]/) !== null;
-            if (isPortuguese) {
-              return `${formattedResults}\n\nCom esta informação, por favor forneça uma resposta final à pergunta do utilizador em Português.`;
-            } else {
-              return `${formattedResults}\n\nWith this information, please provide a final answer to the user's question in English.`;
-            }
+            return `With the following results from the search tool, please answer the user's question. Remember to use the URL from the results to formulate the citations.
+                User question: ${userQuestion}
+                Search results:
+                ${formattedResults.map((result: PageResult) => `Title: ${result.title}\nURL: ${result.url}\nContent: ${result.content}`).join("\n\n")}`;
           },
         },
       },
       toolChoice: "auto",
-      maxSteps: 3, // Limit to prevent search loops - just one tool use and then final answer
     });
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+    });
   } catch (error) {
     console.error(error);
     return new Response("Error processing request", { status: 500 });

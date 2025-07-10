@@ -1,6 +1,6 @@
 "use server";
 
-import { generateText } from "ai";
+import { generateText, ModelMessage, stepCountIs } from "ai";
 import { BLOG_POST_EXAMPLES } from "./examples";
 import { openai } from "@ai-sdk/openai";
 import { GPTPrompt } from "../types/gpt.types";
@@ -124,7 +124,7 @@ export async function generateBlogPost(
    4. You've maintained the same level of uncertainty or certainty as expressed in the source
    5. Any ambiguities or gaps in the source material remain acknowledged rather than filled with assumptions
   `;
-  const messages: GPTPrompt[] = [
+  const messages: ModelMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
     { role: "assistant", content: ASSISTANT_PROMPT },
@@ -134,8 +134,8 @@ export async function generateBlogPost(
     model: openai("gpt-4.1-nano"),
     messages,
     temperature: 0.3,
-    maxSteps: 1,
-    maxTokens: 1500,
+    stopWhen: stepCountIs(1),
+    maxOutputTokens: 1500,
   });
 
   return result.text;

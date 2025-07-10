@@ -29,15 +29,7 @@ export async function checkForDocumentLimit(): Promise<{
   return { success: true, message: "Document limit not reached" };
 }
 
-export async function documentLimitCheck() {
-  const response = await checkForDocumentLimit();
-  if (!response.success) {
-    throw new Error(response.message);
-  }
-}
-
 export const handleFileUpload = async (file: File, documentTitle: string) => {
-  await documentLimitCheck();
   const checksum = await generateChecksum(file);
   const documentId = await generateRandomFileName();
 

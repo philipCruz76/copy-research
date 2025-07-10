@@ -1,6 +1,9 @@
 "use client";
 
-import { handleFileUpload } from "@/app/lib/actions/document-actions";
+import {
+  checkForDocumentLimit,
+  handleFileUpload,
+} from "@/app/lib/actions/document-actions";
 import { useFileUploadModal } from "@/app/lib/stores/file-upload";
 import { Dialog, DialogContent, DialogTitle } from "@/app/lib/ui/dialog";
 import { Input } from "@/app/lib/ui/Input";
@@ -23,7 +26,8 @@ const acceptedTypes = [
 ];
 
 const FileUploadModalDesktop = () => {
-  const { isOpen, setIsOpen } = useFileUploadModal();
+  const { setDocumentLimit, setDocumentLimitMessage, isOpen, setIsOpen } =
+    useFileUploadModal();
   const [isLoading, setIsLoading] = useState(false);
   const {
     formState: { isValid },
@@ -45,6 +49,14 @@ const FileUploadModalDesktop = () => {
       const result = await handleFileUpload(data.file, data.title);
       if (result.success) {
         toast.success(result.message);
+        const response = await checkForDocumentLimit();
+        if (!response.success) {
+          setDocumentLimit(true);
+          setDocumentLimitMessage(response.message);
+        } else {
+          setDocumentLimit(false);
+          setDocumentLimitMessage("");
+        }
         setValue("title", "");
         unregister("file");
         trigger();

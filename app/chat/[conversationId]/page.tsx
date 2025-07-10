@@ -1,84 +1,81 @@
 "use client";
 
-import { useChat, useCompletion } from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "../../components/chat/ChatInput";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Message } from "ai";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
 import { toast } from "sonner";
 import { useCitationsSidebarStore } from "@/app/lib/stores/citations-sidebar-store";
-import { Citation, CitedResponse } from "@/app/lib/types/citations.types";
+import {
+  CitedResponse,
+  SearchResultInformation,
+} from "@/app/lib/types/citations.types";
 import CitationSidebar from "@/app/components/chat/CitationSidebar";
-import { getDocumentByChunkId } from "@/app/lib/actions/getDocumentByChunkId";
+import DocumentChunkCitations from "@/app/components/chat/DocumentChunkCitations";
+import SearchResultCitations from "@/app/components/chat/SearchResultCtiations";
+
+const extractChunkId = (
+  text: string,
+): { mainText: string; chunkIds: string[] } => {
+  const matches = [...text.matchAll(/\[(.*?)\]/g)];
+  const ids = matches.flatMap((m) => m[1].split(",").map((id) => id.trim()));
+  const mainText = text.slice(0, text.lastIndexOf("[")).trim();
+  return { mainText: mainText, chunkIds: ids };
+};
+
+const parseSearchResult = (text: string) => {
+  console.log("CALLED PARSE SEARCH RESULT");
+  const searchResultString = text.match(/^([^{]*){(.*)/);
+  if (!searchResultString) return null;
+
+  try {
+    const parsedInfo = JSON.parse("[{" + searchResultString?.[2] + "]" || "[]");
+    return {
+      prefix: searchResultString[1],
+      parsedInfo: parsedInfo,
+    };
+  } catch (e) {
+    console.error("Error parsing search result:", e);
+    return null;
+  }
+};
 
 export default function ChatPage() {
   const params = useParams();
-  const conversationId = params.conversationId as string;
-  const { conversations, isLoadingConversations } = useConversationStore();
+
+  const { conversations, isLoadingConversations, currentConversationId } =
+    useConversationStore();
+  const conversationId =
+    currentConversationId !== null
+      ? currentConversationId
+      : (params.conversationId as string);
+  const [, setInitialMessages] = useState<UIMessage[]>([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
   );
-  const {
-    isOpen,
-    citations,
-    setIsOpen,
-    setCitations,
-    setIsLoading,
-    setCitedDocument,
-  } = useCitationsSidebarStore();
-
-  const {
-    messages,
-    setMessages,
-    handleSubmit,
-    input,
-    setInput,
-    status,
-    id,
-    stop,
-  } = useChat({
-    maxSteps: 5,
-    id: conversationId,
-    // Only send last message to the server
-    experimental_prepareRequestBody({ messages }) {
-      return { message: messages[messages.length - 1], id: conversationId };
-    },
-  });
-
-  const areCitationsEqual = useCallback(
-    (citations1: Citation[], citations2: Citation[]) => {
-      if (citations1.length !== citations2.length) return false;
-      return citations1.every(
-        (citation, index) =>
-          citation.chunkId === citations2[index].chunkId &&
-          citation.relevantText === citations2[index].relevantText &&
-          citation.position === citations2[index].position,
+  const { isOpen } = useCitationsSidebarStore();
+  let searchResultInformation: SearchResultInformation[] | null = null;
+  const { messages, sendMessage, status, stop, setMessages } = useChat({
+    maxSteps: 3,
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      prepareSendMessagesRequest({ messages }) {
+        return {
+          body: { message: messages[messages.length - 1], id: conversationId },
+        };
+      },
+    }),
+    onError: (error) => {
+      toast.error(
+        error.message ||
+          "An error occurred while processing your request. Please try again.",
       );
     },
-    [],
-  );
-
-  const retriveCitationInfo = async (chunkId: string) => {
-    try {
-      setIsLoading(true);
-
-      const document = await getDocumentByChunkId(chunkId);
-      if (!document) {
-        toast.error("Document not found");
-        return;
-      }
-      setCitedDocument(document);
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error retriving citation info:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  });
 
   // Load existing messages when the component mounts
   useEffect(() => {
@@ -90,14 +87,12 @@ export default function ChatPage() {
         if (conversation) {
           if (conversation.messages) {
             // Convert database messages to the format expected by useChat
-            const formattedMessages = conversation.messages.map((msg) => ({
+            const parsedMessages = conversation.messages.map((msg) => ({
               id: msg.id,
               role: msg.role as "user" | "assistant" | "system" | "data",
-              content: msg.content,
               parts: [{ type: "text", text: msg.content }],
-            })) as Message[];
-
-            setMessages(formattedMessages);
+            })) as UIMessage[];
+            setMessages(parsedMessages);
           }
         } else {
           console.log("No matching conversation found for ID:", conversationId);
@@ -120,13 +115,13 @@ export default function ChatPage() {
                     content: msg.content,
                     parts: [{ type: "text", text: msg.content }],
                   }),
-                ) as Message[];
+                ) as UIMessage[];
 
                 console.log(
                   "Formatted messages from server:",
                   formattedMessages,
                 );
-                setMessages(formattedMessages);
+                setInitialMessages(formattedMessages);
               }
             } catch (error) {
               console.error("Error loading messages from server:", error);
@@ -140,17 +135,9 @@ export default function ChatPage() {
         console.error("Error loading messages:", error);
       }
     }
-  }, [conversationId, conversations, setMessages]);
+  }, [conversationId, conversations]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const extractChunkId = (
-    text: string,
-  ): { mainText: string; chunkIds: string[] } => {
-    const matches = [...text.matchAll(/\[(.*?)\]/g)];
-    const ids = matches.flatMap((m) => m[1].split(",").map((id) => id.trim()));
-    const mainText = text.slice(0, text.lastIndexOf("[")).trim();
-    return { mainText: mainText, chunkIds: ids };
-  };
 
   useEffect(() => {
     const scrollToBottom = () => {
@@ -194,7 +181,7 @@ export default function ChatPage() {
       </header>
 
       {/* Messages container */}
-      <div className="flex-1 overflow-y-auto pb-32">
+      <div className="flex-1 overflow-y-auto pb-36">
         <div className="max-w-3xl mx-auto pt-6">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full mt-12 px-4 text-center">
@@ -223,6 +210,18 @@ export default function ChatPage() {
                   >
                     {message.parts.map((part, i) => {
                       switch (part.type) {
+                        case "step-start":
+                          return null;
+                        case "reasoning":
+                          return (
+                            <div
+                              key={`${message.id}-reasoning`}
+                              className="whitespace-pre-wrap"
+                            >
+                              THIS IS A REASONING STEP
+                              {part.text}
+                            </div>
+                          );
                         case "text":
                           if (message.role === "assistant") {
                             if (message.id === streamingMessageId) {
@@ -237,14 +236,26 @@ export default function ChatPage() {
                                 </div>
                               );
                             }
+                            if (part.text.includes("Search executed: ")) {
+                              const searchResultString = parseSearchResult(
+                                part.text,
+                              );
+                              searchResultInformation =
+                                searchResultString?.parsedInfo || null;
+                              return (
+                                <div
+                                  key={message.id}
+                                  className="whitespace-pre-wrap italic text-gray-500 dark:text-gray-400"
+                                >
+                                  {searchResultString?.prefix.trim()}
+                                </div>
+                              );
+                            }
                             let messageWithCitations: CitedResponse;
                             try {
-                              // Try to parse if it's a string, otherwise use as is
-                              messageWithCitations =
-                                typeof message.content === "string"
-                                  ? JSON.parse(message.content)
-                                  : (message.content as CitedResponse);
+                              messageWithCitations = JSON.parse(part.text);
                             } catch (e) {
+                              toast.error("Error parsing message content");
                               console.error(
                                 "Error parsing message content:",
                                 e,
@@ -254,7 +265,7 @@ export default function ChatPage() {
                                   key={message.id}
                                   className="whitespace-pre-wrap"
                                 >
-                                  {message.content}
+                                  {part.text}
                                 </div>
                               );
                             }
@@ -268,40 +279,47 @@ export default function ChatPage() {
                                 className="whitespace-pre-wrap"
                               >
                                 {result.mainText}
-                                {result.chunkIds.map((chunkId, index) => (
-                                  <button
-                                    key={`citation-${index}`}
-                                    className="p-[2px] rounded-md text-blue-500 hover:text-blue-900 hover:bg-blue-200 ml-2"
-                                    onClick={() => {
-                                      if (
-                                        !areCitationsEqual(
-                                          messageWithCitations.citations,
-                                          citations,
-                                        )
-                                      ) {
-                                        setCitations(
-                                          messageWithCitations.citations,
-                                        );
-                                        retriveCitationInfo(chunkId);
-                                      }
-                                      setIsOpen(true);
-                                    }}
-                                  >
-                                    [{index + 1}]
-                                  </button>
-                                ))}
+                                {result.chunkIds.map((chunkId, index) => {
+                                  if (chunkId.startsWith("doc_")) {
+                                    return (
+                                      <DocumentChunkCitations
+                                        key={`${message.id}-${index}-doc`}
+                                        index={index}
+                                        messageWithCitations={
+                                          messageWithCitations
+                                        }
+                                        chunkId={chunkId}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <SearchResultCitations
+                                        key={`${message.id}-${index}-search`}
+                                        index={index}
+                                        source={chunkId}
+                                        searchResultInformation={
+                                          searchResultInformation
+                                        }
+                                        citations={
+                                          messageWithCitations.citations
+                                        }
+                                      />
+                                    );
+                                  }
+                                })}
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div
+                                key={`${message.id}-${i}`}
+                                className="whitespace-pre-wrap"
+                              >
+                                {part.text}
                               </div>
                             );
                           }
-                          return (
-                            <div
-                              key={`${message.id}-${i}`}
-                              className="whitespace-pre-wrap"
-                            >
-                              {part.text}
-                            </div>
-                          );
-                        case "tool-invocation":
+                        case "tool-runOnlineSearch":
                           return (
                             <div
                               key={`${message.id}-${i}-toolCall`}
@@ -334,12 +352,10 @@ export default function ChatPage() {
       {conversationsLoaded && (
         <div className=" absolute bottom-0 bg-gradient-to-t from-white dark:from-zinc-900 pt-2 w-full z-1">
           <ChatInput
-            chatId={id}
-            input={input}
-            setInput={setInput}
+            chatId={conversationId}
             isLoading={status !== "ready"}
             status={status}
-            handleSubmit={handleSubmit}
+            handleSubmit={(text) => sendMessage({ text })}
             stop={stop}
             messages={messages}
           />

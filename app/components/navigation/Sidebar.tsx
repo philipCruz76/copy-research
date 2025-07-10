@@ -479,11 +479,7 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed}
             index={5}
           />
-
-          
         </nav>
-
-        
       </motion.div>
     </>
   );

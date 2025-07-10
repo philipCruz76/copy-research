@@ -6,7 +6,7 @@ interface ConversationSkeletonProps {
 
 const ConversationSkeleton = ({ delay = 0 }: ConversationSkeletonProps) => {
   return (
-    <div 
+    <div
       className="bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-105 transition-all duration-300 rounded-lg p-3 border border-gray-200 dark:border-zinc-700 max-w-[95%] animate-fadeIn"
       style={{ animationDelay: `${delay}ms` }}
     >

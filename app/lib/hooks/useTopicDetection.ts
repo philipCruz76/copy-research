@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { ChatMessage } from "@/app/lib/types/gpt.types";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
+import { UIMessage } from "ai";
 
 export function useTopicDetection() {
   const [topic, setTopic] = useState<string | null>(null);
-  const { conversations, setConversations } = useConversationStore();
+  const {
+    conversations,
+    setConversations,
+    setCurrentConversationId,
+    updateConversation,
+  } = useConversationStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  async function detectTopic(messages: ChatMessage[], id: string) {
+  async function detectTopic(messages: UIMessage[], id?: string) {
     if (!messages.length) return;
 
     try {
@@ -24,6 +29,7 @@ export function useTopicDetection() {
 
       const data = await res.json();
       setTopic(data.mainTopic);
+      setCurrentConversationId(data.conversation.id);
 
       // Find if this conversation already exists in the store
       const conversationExists = conversations.some(
@@ -32,19 +38,14 @@ export function useTopicDetection() {
 
       if (conversationExists) {
         // Update existing conversation instead of adding a new one
-        const updatedConversations = conversations.map((conv) =>
-          conv.id === data.conversation.id
-            ? { ...conv, title: data.conversation.title }
-            : conv,
-        );
-        setConversations(updatedConversations);
+        updateConversation(data.conversation.id, {
+          title: data.conversation.title,
+        });
       } else {
         // Add new conversation
-        const updatedConversations = [data.conversation, ...conversations];
-        setConversations(updatedConversations);
+        setConversations([data.conversation, ...conversations]);
       }
-
-      return data.mainTopic;
+      return data.conversation.id;
     } catch (error) {
       console.error("Error detecting topic:", error);
       setTopic(null);

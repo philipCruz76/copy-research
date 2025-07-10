@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Research Assistant",
-  description: "A powerful AI-driven research platform for document analysis, intelligent conversations, and content generation",
+  description:
+    "A powerful AI-driven research platform for document analysis, intelligent conversations, and content generation",
   viewport: {
     width: "device-width",
     initialScale: 1,
@@ -37,9 +38,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-zinc-900`}
       >
         <ThemeProvider>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
+          <ConditionalLayout>{children}</ConditionalLayout>
           <Toaster />
         </ThemeProvider>
       </body>

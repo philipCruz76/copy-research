@@ -1,25 +1,18 @@
 "use server";
 
 import db from "@/app/lib/db";
-import { ChatMessage, FullConversation } from "@/app/lib/types/gpt.types";
+import { FullConversation } from "@/app/lib/types/gpt.types";
 
 /**
  * Creates a new conversation with it's initial message and redirects to its chat page
  */
-export async function createNewConversation(initialMessage: ChatMessage) {
+export async function createNewConversation(chatId: string) {
   try {
     // Create a new conversation in the database
     const conversation = await db.conversation.create({
       data: {
         userId: null, // Can be updated later if user authentication is implemented
-        messages: {
-          create: {
-            id: initialMessage.id,
-            createdAt: initialMessage.createdAt,
-            role: initialMessage.role as string,
-            content: initialMessage.content,
-          },
-        },
+        id: chatId,
       },
     });
 

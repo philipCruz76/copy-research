@@ -1,8 +1,7 @@
 "use server";
 
-import { generateText } from "ai";
+import { generateText, ModelMessage, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { GPTPrompt } from "@/app/lib/types/gpt.types";
 
 export async function parseSubjectMatter(subject: string) {
   const SYSTEM_PROMPT = `Your role is to help out distill a  user input into a more specific and actionable topic that will be used to generate either a blog post or a newsletter.
@@ -27,7 +26,7 @@ export async function parseSubjectMatter(subject: string) {
         -Output:"Misinformation in Elections"
     `;
 
-  const messages: GPTPrompt[] = [
+  const messages: ModelMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
     { role: "assistant", content: ASSISTANT_EXAMPLE },
@@ -37,8 +36,8 @@ export async function parseSubjectMatter(subject: string) {
     model: openai("gpt-4o-mini"),
     messages,
     temperature: 0.7,
-    maxSteps: 1,
-    maxTokens: 100,
+    stopWhen: stepCountIs(1),
+    maxOutputTokens: 100,
   });
 
   return result.text;

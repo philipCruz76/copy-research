@@ -9,8 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^1.3.22",
-    "@ai-sdk/react": "^1.2.12",
+    "@ai-sdk/openai": "^2.0.0-beta.5",
+    "@ai-sdk/react": "^2.0.0-beta.9",
+    "@ai-sdk/rsc": "^1.0.0-beta.9",
     "@aws-sdk/client-s3": "^3.758.0",
     "@aws-sdk/s3-request-presigner": "^3.758.0",
     "@hookform/resolvers": "^5.0.1",
@@ -26,8 +27,8 @@
     "@radix-ui/react-scroll-area": "^1.2.9",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-tooltip": "^1.2.6",
-    "@tavily/core": "^0.3.7",
-    "ai": "^4.3.16",
+    "@tavily/core": "^0.5.9",
+    "ai": "^5.0.0-beta.9",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

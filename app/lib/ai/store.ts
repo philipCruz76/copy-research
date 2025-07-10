@@ -2,9 +2,8 @@
 
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
-import { DocumentChunk, DocumentData, DocumentType } from "@prisma/client";
+import { DocumentChunk, DocumentType } from "@prisma/client";
 import { Document } from "@langchain/core/documents";
-import { Document as DbDocument } from "@prisma/client";
 import { embeddings } from "./gpt";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { generateDocumentHash, generateRandomFileName } from "@/app/lib/utils";
@@ -256,28 +255,33 @@ export const getCachedDocument = async (
   documentId: string,
   ttl: number = 5 * 60 * 1000,
 ) => {
-  // Try to get from cache first
-  const cached = getDocumentFromCache(documentId);
-  if (cached) {
-    console.log("Cached document found:", cached.title);
-    return cached;
-  }
+  try {
+    // Try to get from cache first
+    const cached = getDocumentFromCache(documentId);
+    if (cached) {
+      console.log("Cached document found:", cached.title);
+      return cached;
+    }
 
-  console.log("No cached document found. Retrieving from database...");
-  // If not in cache, retrieve from database
-  const document = await db.document.findUnique({
-    where: { id: documentId },
-    include: { chunks: true, documentData: true },
-  });
+    console.log("No cached document found. Retrieving from database...");
+    // If not in cache, retrieve from database
+    const document = await db.document.findUnique({
+      where: { id: documentId },
+      include: { chunks: true, documentData: true },
+    });
 
-  if (!document) {
-    console.log("No document found in database.");
-  }
-  // Store in cache if found
-  if (document) {
-    console.log("Document found in database. Storing in cache...");
-    storeDocumentInCache(documentId, document, ttl);
-  }
+    if (!document) {
+      console.log("No document found in database.");
+    }
+    // Store in cache if found
+    if (document) {
+      console.log("Document found in database. Storing in cache...");
+      storeDocumentInCache(documentId, document, ttl);
+    }
 
-  return document;
+    return document;
+  } catch (error: any) {
+    console.log("Document ID: ", documentId);
+    throw new Error("Error getting cached document.", error);
+  }
 };

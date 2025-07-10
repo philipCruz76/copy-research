@@ -9,12 +9,16 @@ import {
 type ConversationState = {
   conversations: FullConversation[];
   messages: ChatMessage[];
-  currentTopicId: string | null;
+  currentConversationId: string | null;
   topicContexts: Record<string, TopicContext>;
   isLoadingConversations: boolean;
   setConversations: (conversations: FullConversation[]) => void;
   setMessages: (message: ChatMessage) => void;
-  setCurrentTopic: (topicId: string | null) => void;
+  setCurrentConversationId: (conversationId: string | null) => void;
+  updateConversation: (
+    conversationID: string,
+    partialConversation: Partial<FullConversation>,
+  ) => void;
   updateTopicContext: (topicId: string, context: Partial<TopicContext>) => void;
   clearMessages: () => void;
   setIsLoadingConversations: (isLoadingConversations: boolean) => void;
@@ -23,7 +27,7 @@ type ConversationState = {
 export const useConversationStore = create<ConversationState>()((set) => ({
   conversations: [],
   messages: [],
-  currentTopicId: null,
+  currentConversationId: null,
   topicContexts: {},
   isLoadingConversations: true,
 
@@ -40,7 +44,24 @@ export const useConversationStore = create<ConversationState>()((set) => ({
         });
       }),
     ),
-  setCurrentTopic: (topicId) => set({ currentTopicId: topicId }),
+  setCurrentConversationId: (conversationId) =>
+    set({ currentConversationId: conversationId }),
+  updateConversation: (conversationID, partialConversation) =>
+    set((state) => {
+      const existingConversation = state.conversations.find(
+        (conv) => conv.id === conversationID,
+      );
+      if (existingConversation) {
+        return {
+          conversations: state.conversations.map((conv) =>
+            conv.id === conversationID
+              ? { ...conv, ...partialConversation }
+              : conv,
+          ),
+        };
+      }
+      return state;
+    }),
   updateTopicContext: (topicId, partialContext) =>
     set((state) => {
       const existingContext = state.topicContexts[topicId] || {

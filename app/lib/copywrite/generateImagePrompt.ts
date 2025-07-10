@@ -1,7 +1,7 @@
 "use server";
 
 import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateText, ModelMessage } from "ai";
 import { GPTPrompt } from "@/app/lib/types/gpt.types";
 
 export async function generateImagePrompt(blogContent: string) {
@@ -37,7 +37,7 @@ export async function generateImagePrompt(blogContent: string) {
 
   const USER_PROMPT = `Blog Content: ${blogContent}`;
 
-  const messages: GPTPrompt[] = [
+  const messages: ModelMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
   ];
@@ -45,7 +45,7 @@ export async function generateImagePrompt(blogContent: string) {
   const result = await generateText({
     model: openai("gpt-4o-mini"),
     messages,
-    maxTokens: 400,
+    maxOutputTokens: 400,
     temperature: 0.5,
   });
 

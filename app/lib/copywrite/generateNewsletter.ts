@@ -1,6 +1,6 @@
 "use server";
 
-import { generateText } from "ai";
+import { generateText, ModelMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { GPTPrompt } from "@/app/lib/types/gpt.types";
 
@@ -37,7 +37,7 @@ export async function generateNewsletter(blogContent: string) {
     ${blogContent}
   `;
 
-  const messages: GPTPrompt[] = [
+  const messages: ModelMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: USER_PROMPT },
   ];
@@ -45,7 +45,7 @@ export async function generateNewsletter(blogContent: string) {
   const result = await generateText({
     model: openai("gpt-4o-mini"),
     messages,
-    maxTokens: 1000,
+    maxOutputTokens: 1000,
     temperature: 0.7,
   });
 

@@ -18,7 +18,7 @@ export async function synthesizeQueryFrom(
   2-The query should be in the style of a search engine query.
   3- If there is a need to add a date to the query use this value: ${currentYear}
   `,
-    maxTokens: 100,
+    maxOutputTokens: 100,
     temperature: 0.1,
   });
 
@@ -35,7 +35,8 @@ export async function getSearchResults(query: string) {
     {
       searchDepth: "advanced",
       includeImages: false,
-      includeRawContent: true,
+      includeRawContent: "markdown",
+      includeFavicon: true,
       maxTokens: 2,
     },
   );

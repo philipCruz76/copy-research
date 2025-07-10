@@ -1,6 +1,9 @@
 "use client";
 
-import { handleFileUpload } from "@/app/lib/actions/document-actions";
+import {
+  checkForDocumentLimit,
+  handleFileUpload,
+} from "@/app/lib/actions/document-actions";
 import { useFileUploadModal } from "@/app/lib/stores/file-upload";
 import {
   Drawer,
@@ -29,7 +32,8 @@ const acceptedTypes = [
 ];
 
 const FileUploadModalMobile = () => {
-  const { isOpen, setIsOpen } = useFileUploadModal();
+  const { setDocumentLimit, setDocumentLimitMessage, isOpen, setIsOpen } =
+    useFileUploadModal();
   const drawerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const {
@@ -52,6 +56,14 @@ const FileUploadModalMobile = () => {
       const result = await handleFileUpload(data.file, data.title);
       if (result.success) {
         toast.success(result.message);
+        const response = await checkForDocumentLimit();
+        if (!response.success) {
+          setDocumentLimit(true);
+          setDocumentLimitMessage(response.message);
+        } else {
+          setDocumentLimit(false);
+          setDocumentLimitMessage("");
+        }
         setValue("title", "");
         unregister("file");
         trigger();

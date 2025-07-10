@@ -1,31 +1,25 @@
 "use client";
 
-import { Message } from "ai";
+import { UIMessage } from "ai";
 import { useRef, useEffect, useState, useCallback, memo } from "react";
 import { useWindowSize } from "usehooks-ts";
 import { Textarea } from "@/app/lib/ui/Textarea";
 import { cn } from "@/app/lib/utils";
 import { toast } from "sonner";
 import { useTopicDetection } from "@/app/lib/hooks/useTopicDetection";
-import { ChatMessage } from "@/app/lib/types/gpt.types";
-import { useRouter } from "next/navigation";
 
 interface ChatInputProps {
-  chatId: string;
-  input: string;
-  setInput: (value: string) => void;
+  chatId?: string;
   isLoading: boolean;
-  stop: () => void;
-  messages: Array<Message>;
+  stop?: () => void;
+  messages: Array<UIMessage>;
   status: "submitted" | "streaming" | "ready" | "error";
-  handleSubmit: (event?: { preventDefault?: () => void }) => void;
+  handleSubmit: (text: string) => void;
   className?: string;
 }
 
 function PureChatInput({
   chatId,
-  input,
-  setInput,
   isLoading,
   stop,
   messages,
@@ -34,12 +28,12 @@ function PureChatInput({
   className,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [text, setText] = useState("");
   const { width } = useWindowSize();
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 4000; // Set a reasonable character limit
   const { topic, detectTopic, isLoading: isTopicLoading } = useTopicDetection();
   const [isProcessingTopic, setIsProcessingTopic] = useState(false);
-  const router = useRouter();
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -58,16 +52,16 @@ function PureChatInput({
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.target.value;
-    setInput(value);
+    setText(value);
     setCharCount(value.length);
     adjustHeight();
   };
 
   const submitForm = useCallback(async () => {
-    if (input.trim() === "") return; // Prevent empty submissions
+    if (text.trim() === "") return; // Prevent empty submissions
 
     // Store the current input before clearing it
-    const currentInput = input;
+    const currentInput = text;
 
     // Reset the UI immediately to improve the user experience
     resetHeight();
@@ -83,42 +77,57 @@ function PureChatInput({
 
       try {
         // Create a copy of messages with the new message added
-        const updatedMessages: ChatMessage[] = [
-          ...(messages as ChatMessage[]),
+        const updatedMessages: UIMessage[] = [
+          ...messages,
           {
             id: `temp-${Date.now()}`,
             role: "user",
-            content: currentInput,
+            parts: [
+              {
+                type: "text",
+                text: currentInput,
+              },
+            ],
           },
         ];
 
-        // Extract topic first
-        await detectTopic(updatedMessages, chatId);
-        // Start the handleSubmit process
-        handleSubmit();
-        if (status === "ready") {
-          router.push(`/chat/${chatId}`);
+        if (chatId !== undefined) {
+          // Extract topic first
+          await detectTopic(updatedMessages, chatId).then((id) => {
+            if (status === "ready") {
+              window.history.replaceState(null, "", `/chat/${id}`);
+            }
+            handleSubmit(text);
+            setText("");
+          });
+        } else {
+          // Extract topic first
+          await detectTopic(updatedMessages).then((id) => {
+            if (status === "ready") {
+              window.history.replaceState(null, "", `/chat/${id}`);
+            }
+            handleSubmit(text);
+            setText("");
+          });
         }
-        // After topic is detected, redirect to the chat page
-        // Using window.location instead of redirect to allow handleSubmit to continue running
-        //window.location.href = `/chat/${chatId}`;
       } catch (error) {
         console.error("Error in processing:", error);
 
         // If topic extraction fails, still send the message
-        handleSubmit();
+        handleSubmit(text);
       } finally {
         setIsProcessingTopic(false);
       }
     } else {
       // For other messages, just submit normally
-      handleSubmit();
+      handleSubmit(text);
+      setText("");
     }
 
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [handleSubmit, width, input, messages, detectTopic]);
+  }, [handleSubmit, width, text, messages, detectTopic, status]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -128,8 +137,8 @@ function PureChatInput({
 
   // Update char count when input changes externally
   useEffect(() => {
-    setCharCount(input.length);
-  }, [input]);
+    setCharCount(text.length);
+  }, [text]);
 
   // Handle window resize to adjust textarea height
   useEffect(() => {
@@ -157,7 +166,7 @@ function PureChatInput({
         <Textarea
           ref={textareaRef}
           placeholder="Message..."
-          value={input}
+          value={text}
           onChange={handleInput}
           className={cn(
             "min-h-[80px] max-h-[200px] py-3 pl-4 pr-14 w-full overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
@@ -174,7 +183,7 @@ function PureChatInput({
                 toast.error(
                   "Please wait for the model to finish its response!",
                 );
-              } else if (input.trim() !== "") {
+              } else if (text.trim() !== "") {
                 submitForm();
               }
             }
@@ -196,16 +205,16 @@ function PureChatInput({
         <button
           onClick={() => {
             if (isLoading) {
-              stop();
+              stop?.();
               toast.info("Stopped generation");
-            } else if (input.trim() !== "") {
+            } else if (text.trim() !== "") {
               submitForm();
             }
           }}
           disabled={isLoading || isProcessingTopic}
           className={cn(
             "absolute right-2 bottom-2 p-1.5 rounded-lg transition-colors",
-            input.trim() === ""
+            text.trim() === ""
               ? "text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-70"
               : isLoading || isProcessingTopic
                 ? "text-red-500 hover:bg-gray-100 dark:hover:bg-zinc-700"
@@ -246,6 +255,16 @@ function PureChatInput({
           )}
         </button>
 
+        {status === "streaming" && (
+          <button
+            className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl"
+            type="submit"
+            onClick={stop}
+          >
+            Stop
+          </button>
+        )}
+
         {/* Loading indicator */}
         {isLoading && (
           <div className="absolute top-3 right-10 flex items-center">
@@ -269,8 +288,5 @@ function PureChatInput({
 
 export const ChatInput = memo(PureChatInput, (prevProps, nextProps) => {
   // Both conditions must be false to re-render
-  return (
-    prevProps.input === nextProps.input &&
-    prevProps.isLoading === nextProps.isLoading
-  );
+  return prevProps.isLoading === nextProps.isLoading;
 });

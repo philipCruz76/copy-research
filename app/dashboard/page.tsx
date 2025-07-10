@@ -42,7 +42,7 @@ export default function DashboardPage() {
     revalidateIfStale: false,
     dedupingInterval: 60000, // 1 minute
   });
-  
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white p-6">
       <header className="mb-6">
@@ -56,11 +56,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Documents Card */}
         {documentsLoading ? (
-          <StatsCardSkeleton 
-            icon={FileText} 
-            title="Documents" 
-            showViewAll={true} 
-            delay={0} 
+          <StatsCardSkeleton
+            icon={FileText}
+            title="Documents"
+            showViewAll={true}
+            delay={0}
           />
         ) : (
           <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 animate-fadeIn">
@@ -90,13 +90,16 @@ export default function DashboardPage() {
 
         {/* Conversations Card */}
         {conversationsLoading ? (
-          <StatsCardSkeleton 
-            icon={MessageSquare} 
-            title="Conversations" 
-            delay={100} 
+          <StatsCardSkeleton
+            icon={MessageSquare}
+            title="Conversations"
+            delay={100}
           />
         ) : (
-          <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 animate-fadeIn" style={{ animationDelay: '100ms' }}>
+          <div
+            className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 animate-fadeIn"
+            style={{ animationDelay: "100ms" }}
+          >
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Conversations
@@ -113,7 +116,10 @@ export default function DashboardPage() {
         )}
 
         {/* Generated Content Card */}
-        <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 animate-fadeIn" style={{ animationDelay: '200ms' }}>
+        <div
+          className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4 border border-gray-200 dark:border-zinc-700 animate-fadeIn"
+          style={{ animationDelay: "200ms" }}
+        >
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Generated Content
@@ -166,7 +172,7 @@ export default function DashboardPage() {
           <Link
             href="/chat"
             className="bg-black dark:bg-white text-white hover:scale-105 transition-all duration-300 dark:text-black rounded-lg p-4 hover:bg-gray-800 dark:hover:bg-gray-200 animate-fadeIn"
-            style={{ animationDelay: '300ms' }}
+            style={{ animationDelay: "300ms" }}
           >
             <h3 className="font-medium mb-1">Start a New Chat</h3>
             <p className="text-sm text-gray-300 dark:text-gray-700">
@@ -177,7 +183,7 @@ export default function DashboardPage() {
           <Link
             href="/add-documents"
             className="bg-gray-100 dark:bg-zinc-800 hover:scale-105 transition-all duration-300 text-black dark:text-white rounded-lg p-4 hover:bg-gray-200 dark:hover:bg-zinc-700 animate-fadeIn"
-            style={{ animationDelay: '400ms' }}
+            style={{ animationDelay: "400ms" }}
           >
             <h3 className="font-medium mb-1">Upload Documents</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">

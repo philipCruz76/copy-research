@@ -55,6 +55,10 @@ export type PageResult = {
    * Page content or snippet
    */
   content: string;
+  /**
+   * Page favicon
+   */
+  favicon: string;
 };
 
 /** Unified search result interface */
@@ -100,6 +104,7 @@ export class SearchClient<T extends SearchProvider> {
             title: item.title || "",
             url: item.url,
             content: item.content,
+            favicon: response.favicon || "",
           })),
         };
       default:

@@ -7,16 +7,14 @@ interface ConditionalLayoutProps {
   children: React.ReactNode;
 }
 
-export default function ConditionalLayout({ children }: ConditionalLayoutProps) {
+export default function ConditionalLayout({
+  children,
+}: ConditionalLayoutProps) {
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
 
   if (isLandingPage) {
-    return (
-      <div className="min-h-screen">
-        {children}
-      </div>
-    );
+    return <div className="min-h-screen">{children}</div>;
   }
 
   return (
@@ -27,4 +25,4 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
       </main>
     </div>
   );
-} 
+}
