@@ -8,10 +8,17 @@ import {
 import { Input } from "@/app/lib/ui/Input";
 import { Textarea } from "@/app/lib/ui/Textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+type BlogType = {
+  title: string;
+  topic: string;
+  style: string;
+  audience: string;
+  keywords: string;
+};
 const BlogGenOverview = () => {
   const {
     title,
@@ -27,6 +34,13 @@ const BlogGenOverview = () => {
     setKeywords,
     setIsGenerating,
   } = useBlogGenWizardStore();
+  const [currentBlog, setCurrentBlog] = useState<BlogType>({
+    title: "",
+    topic: "",
+    style: "",
+    audience: "",
+    keywords: "",
+  });
 
   const {
     register,
@@ -55,6 +69,8 @@ const BlogGenOverview = () => {
         setTitle(data.title);
         setTopic(data.topic);
         setStyle(data.style);
+        setAudience(data.audience ?? "");
+        setKeywords(data.keywords ?? "");
         setStep(2);
       } else {
         toast.error("No changes have been made");
@@ -68,6 +84,16 @@ const BlogGenOverview = () => {
   useEffect(() => {
     setStep(1);
   }, []);
+
+  useEffect(() => {
+    setCurrentBlog({
+      title: title,
+      topic: topic,
+      style: style,
+      audience: audience,
+      keywords: keywords,
+    });
+  }, [setStep]);
   return (
     <div className="flex flex-col gap-4 justify-center items-center p-12 mt-6">
       <h1 className="text-4xl font-bold">Generate Blog</h1>
@@ -85,14 +111,14 @@ const BlogGenOverview = () => {
             Title
           </label>
           <Input
-            value={title}
+            value={currentBlog.title}
             placeholder="Enter a title for your blog post"
             className="w-[80%]"
             {...register("title", {
               required: "Title is required",
               onChange: (e) => {
                 e.preventDefault();
-                setTitle(e.target.value);
+                setCurrentBlog({ ...currentBlog, title: e.target.value });
               },
             })}
           />
@@ -104,13 +130,14 @@ const BlogGenOverview = () => {
           </label>
           <Textarea
             id="topic"
-            value={topic}
+            value={currentBlog.topic}
             placeholder="Enter the topic or subject matter for your blog post..."
             {...register("topic", {
               required: "Topic is required",
+              value: topic,
               onChange: (e) => {
                 e.preventDefault();
-                setTopic(e.target.value);
+                setCurrentBlog({ ...currentBlog, topic: e.target.value });
               },
             })}
           />
@@ -127,13 +154,13 @@ const BlogGenOverview = () => {
               </label>
               <select
                 id="style"
-                value={style}
+                value={currentBlog.style}
                 className="w-full h-[40px] rounded-md border border-gray-300 p-2"
                 {...register("style", {
                   required: "Style is required",
                   onChange: (e) => {
                     e.preventDefault();
-                    setStyle(e.target.value);
+                    setCurrentBlog({ ...currentBlog, style: e.target.value });
                   },
                 })}
               >
@@ -152,14 +179,17 @@ const BlogGenOverview = () => {
               </label>
               <Input
                 id="audience"
-                value={audience}
+                value={currentBlog.audience}
                 placeholder="Write about who you want to target..."
                 className="w-full h-[40px] rounded-md border border-gray-300 p-2"
                 {...register("audience", {
                   required: "Audience is required",
                   onChange: (e) => {
                     e.preventDefault();
-                    setAudience(e.target.value);
+                    setCurrentBlog({
+                      ...currentBlog,
+                      audience: e.target.value,
+                    });
                   },
                 })}
               />
@@ -174,14 +204,17 @@ const BlogGenOverview = () => {
               </label>
               <Input
                 id="keywords"
-                value={keywords}
+                value={currentBlog.keywords}
                 placeholder="Enter the keywords for your blog post..."
                 className="min-w-full h-[40px] rounded-md border border-gray-300 p-2"
                 {...register("keywords", {
                   required: "Keywords are required",
                   onChange: (e) => {
                     e.preventDefault();
-                    setKeywords(e.target.value);
+                    setCurrentBlog({
+                      ...currentBlog,
+                      keywords: e.target.value,
+                    });
                   },
                 })}
               />

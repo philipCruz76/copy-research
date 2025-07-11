@@ -155,7 +155,7 @@ function PureChatInput({
   }, []);
 
   return (
-    <div className=" gap-2 px-4 py-2 w-full desktop:py-4 tablet:py-4 desktop:max-w-3xl mx-auto ">
+    <div className=" px-2 bg-transparent desktop:max-w-3xl mx-auto ">
       {topic && (
         <div className="mb-2 text-sm text-center text-gray-500 dark:text-gray-400">
           Current topic: {topic}{" "}

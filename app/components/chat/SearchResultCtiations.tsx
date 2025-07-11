@@ -29,7 +29,7 @@ const SearchResultCitations = ({
     return (
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger className=" select-none rounded-[0.3125rem] ml-[5px] text-center min-w-[16px] min-h-[16px]  px-[2px] bg-zinc-700/80 hover:bg-violet-500 cursor-pointer">
+          <TooltipTrigger className=" select-none rounded-[0.3125rem] ml-[5px] text-center min-w-[16px] min-h-[16px]  px-[2px] bg-gray-300 dark:bg-zinc-700/80 hover:bg-cyan-500 dark:hover:bg-violet-500 cursor-pointer">
             <Link
               href={searchResultInformation[index].url}
               target="_blank"
@@ -39,7 +39,7 @@ const SearchResultCitations = ({
               {index + 1}
             </Link>
           </TooltipTrigger>
-          <TooltipContent className="w-[320px] min-h-[160px] bg-[#2d2f2f] rounded-lg border shadow-lg flex flex-col gap-2 text-white justify-start items-start p-4">
+          <TooltipContent className="w-[320px] min-h-[160px] bg-white dark:bg-[#2d2f2f] rounded-lg border shadow-lg flex flex-col gap-2 text-black dark:text-white justify-start items-start p-4">
             <Link
               href={searchResultInformation[index].url}
               target="_blank"

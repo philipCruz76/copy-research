@@ -3,7 +3,6 @@
 import { generateText, ModelMessage, stepCountIs } from "ai";
 import { BLOG_POST_EXAMPLES } from "./examples";
 import { openai } from "@ai-sdk/openai";
-import { GPTPrompt } from "../types/gpt.types";
 
 const FORMAL_TONE_PARAMETERS =
   "Keep the writing tone professional and informative. Find the balance between technicality and engaging content.";
@@ -30,7 +29,7 @@ export async function generateBlogPost(
   const SYSTEM_PROMPT = `
     You are a professional copywriter that specializes in creating engaging and informative blog posts. Your task is to write a blog post about ${topic} with the title "${title}". ${audienceString} ${keywordsString} Do not deviate from the subject matter and do not neglect important SEO elements. You will be given a context that will help you write the blog post.
 
-    IMPORTANT: Check for the language used in the input and write the blog post in the same language. The only viable options are English and Portuguese from Portugal. If there is a mix of languages, write the blog post in Portuguese from Portugal. Do not add any other language to the blog post and do not accept input in any other languages.
+    IMPORTANT: Check for the language used in the input and write the blog post in the same language. Currently English is the only allowed language. Do no accept input in any other languages.
     
 
      ## **STRICT CONTENT ACCURACY RULES:**
@@ -106,6 +105,8 @@ export async function generateBlogPost(
     7. Uses Markdown formatting for structure
     8. CRITICAL: Do not add ANY information, context, or explanations that are not explicitly present in the source material
     9. If the source material lacks detail on a particular aspect, acknowledge the limitation rather than filling in gaps
+
+    IMPORTANT: Check for the language used in the input and write the blog post in the same language. Currently English is the only allowed language. Do no accept input in any other languages.
   `;
 
   const ASSISTANT_PROMPT = `
@@ -133,7 +134,7 @@ export async function generateBlogPost(
   const result = await generateText({
     model: openai("gpt-4.1-nano"),
     messages,
-    temperature: 0.3,
+    temperature: 0.1,
     stopWhen: stepCountIs(1),
     maxOutputTokens: 1500,
   });

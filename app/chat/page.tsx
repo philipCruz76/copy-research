@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/app/components/chat/ChatInput";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { DefaultChatTransport } from "ai";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
@@ -12,6 +12,7 @@ import { CitedResponse } from "@/app/lib/types/citations.types";
 import CitationSidebar from "@/app/components/chat/CitationSidebar";
 import DocumentChunkCitations from "@/app/components/chat/DocumentChunkCitations";
 import SearchResultCitations from "@/app/components/chat/SearchResultCtiations";
+import { ArrowDown } from "lucide-react";
 
 export default function ChatPage() {
   const { conversations, isLoadingConversations } = useConversationStore();
@@ -20,6 +21,10 @@ export default function ChatPage() {
     null,
   );
   const { isOpen } = useCitationsSidebarStore();
+  const windowRef = useRef<Window | null>(null);
+  const [isLastMessageVisible, setIsLastMessageVisible] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, stop, setMessages, id } = useChat({
     maxSteps: 3,
@@ -44,7 +49,6 @@ export default function ChatPage() {
     },
   });
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const extractChunkId = (
     text: string,
   ): { mainText: string; chunkIds: string[] } => {
@@ -52,6 +56,22 @@ export default function ChatPage() {
     const ids = matches.flatMap((m) => m[1].split(",").map((id) => id.trim()));
     const mainText = text.slice(0, text.lastIndexOf("[")).trim();
     return { mainText: mainText, chunkIds: ids };
+  };
+  const checkLastMessageVisibility = () => {
+    if (!messagesEndRef.current || !messagesContainerRef.current) return;
+
+    const container = messagesContainerRef.current;
+    const lastMessage = messagesEndRef.current;
+
+    const containerRect = container.getBoundingClientRect();
+    const lastMessageRect = lastMessage.getBoundingClientRect();
+
+    // Check if the last message is fully visible within the container
+    const isVisible =
+      lastMessageRect.top >= containerRect.top &&
+      lastMessageRect.bottom <= containerRect.bottom;
+
+    setIsLastMessageVisible(isVisible);
   };
 
   useEffect(() => {
@@ -66,7 +86,26 @@ export default function ChatPage() {
       setConversationsLoaded(true);
     }
   }, [conversations]);
+  useEffect(() => {
+    windowRef.current = window;
+  }, []);
 
+  useEffect(() => {
+    // Check visibility when messages change
+    checkLastMessageVisibility();
+  }, [windowRef.current]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      checkLastMessageVisibility();
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [checkLastMessageVisibility]);
   useEffect(() => {
     if (status === "streaming" && messages.length > 0) {
       // Get the ID of the most recent assistant message
@@ -119,7 +158,7 @@ export default function ChatPage() {
                   <div
                     className={`max-w-[85%] px-[18px] py-[8px]  ${
                       message.role === "user"
-                        ? "bg-zinc-700 rounded-3xl min-w-[24px] min-h-[24px] text-gray-100"
+                        ? "bg-gray-300 text-black dark:bg-zinc-700 rounded-3xl min-w-[24px] min-h-[24px] dark:text-gray-100"
                         : " text-black dark:text-white"
                     }`}
                   >
