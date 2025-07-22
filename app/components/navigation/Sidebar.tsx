@@ -8,8 +8,22 @@ import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { getConversations } from "@/app/lib/actions/conversation-actions";
 import { FullConversation } from "@/app/lib/types/gpt.types";
 import ConversationHistory from "@/app/components/navigation/ConversationHistory";
+import { signIn, signOut } from "next-auth/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/app/lib/ui/dropdown-menu";
+import Image from "next/image";
+import { Session } from "next-auth";
+import { ChevronDown } from "lucide-react";
+import UserContextMenu from "./UserContextMenu";
 
 interface SidebarProps {
+  userSession: Session | null;
   className?: string;
 }
 
@@ -72,25 +86,6 @@ const backdropVariants = {
   },
 };
 
-const itemVariants = {
-  open: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
-    },
-  },
-  closed: {
-    x: -20,
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-    },
-  },
-};
-
 const textVariants = {
   open: (i: number) => ({
     opacity: 1,
@@ -109,7 +104,7 @@ const textVariants = {
   },
 };
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, userSession }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -472,13 +467,43 @@ export function Sidebar({ className }: SidebarProps) {
             index={4}
           />
 
-          <NavItem
-            href="/appearance"
-            icon="/icons/canvas.svg"
-            text="Appearance"
-            isCollapsed={isCollapsed}
-            index={5}
-          />
+          {/* Auth */}
+          <div
+            className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} p-3 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors group`}
+          >
+            {userSession ? (
+              <UserContextMenu userSession={userSession} isCollapsed={isCollapsed}/>
+            ) : (
+              <button
+                onClick={() => signIn("google")}
+                className={`cursor-pointer flex justify-center flex-row group items-center  gap-2`}
+              >
+                <div className="flex items-center justify-center w-[32px] h-[32px] bg-gray-200 dark:bg-zinc-800 rounded-full group-hover:bg-indigo-500 transition-colors">
+                  <SvgIcon
+                    src="/icons/user-icon.svg"
+                    alt="Sign In"
+                    width={16}
+                    height={16}
+                    className=" w-[24px] h-[24px] rounded-full group-hover:opacity-80 text-black dark:text-white group-hover:text-white group-hover:border-white border border-black dark:border-white transition-colors duration-200 ease-in-out"
+                  />
+                </div>
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.span
+                      className="ml-1 text-sm font-medium text-black group-hover:text-indigo-400 dark:text-white transition-colors duration-100"
+                      variants={textVariants}
+                      initial="closed"
+                      animate="open"
+                      exit="closed"
+                      custom={6}
+                    >
+                      Sign In
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+            )}
+          </div>
         </nav>
       </motion.div>
     </>

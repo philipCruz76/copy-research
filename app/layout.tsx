@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/app/components/ThemeProvider";
-import ConditionalLayout from "@/app/components/ConditionalLayout";
+import { Sidebar } from "@/app/components/navigation/Sidebar";
+import { auth } from "./lib/auth";
+import { QueryProvider } from "./components/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,20 +29,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-zinc-900`}
       >
-        <ThemeProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
-          <Toaster />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <div className="flex h-screen">
+              <Sidebar userSession={session} />
+              <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

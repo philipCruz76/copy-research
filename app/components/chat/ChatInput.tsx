@@ -165,8 +165,9 @@ function PureChatInput({
       <div className="relative flex justify-center w-full bg-white dark:bg-zinc-800 border border-black/10 dark:border-white/20 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)]">
         <Textarea
           ref={textareaRef}
-          placeholder="Message..."
+          placeholder="Ask anything..."
           value={text}
+          minLength={15}
           onChange={handleInput}
           className={cn(
             "min-h-[80px] max-h-[200px] py-3 pl-4 pr-14 w-full overflow-y-auto resize-none rounded-xl !text-base bg-transparent border-0 focus:ring-0 focus-visible:ring-0 dark:bg-transparent",
@@ -226,8 +227,8 @@ function PureChatInput({
           {isLoading ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
