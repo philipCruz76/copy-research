@@ -6,6 +6,7 @@ import db from "@/app/lib/db";
 import { DocumentChunk, DocumentType } from "@prisma/client";
 import { generateDocumentHash } from "@/app/lib/utils";
 import { getDocumentSummary } from "@/app/lib/ai/getDocumentSummary";
+import { auth } from "@/app/lib/auth";
 
 type DocumentRequest = {
   text: string[];
@@ -14,11 +15,19 @@ type DocumentRequest = {
   documentURL: string;
   checksum: string;
   documentTitle: string;
+  userId: string;
 };
 export async function POST(req: Request) {
   try {
-    const { text, documentId, fileType, documentURL, checksum, documentTitle } =
-      (await req.json()) as DocumentRequest;
+    const {
+      text,
+      documentId,
+      fileType,
+      documentURL,
+      checksum,
+      documentTitle,
+      userId,
+    } = (await req.json()) as DocumentRequest;
 
     const documentSummary = await getDocumentSummary(text.join(" "));
     let uniqueIds: string[] = [];
@@ -52,6 +61,7 @@ export async function POST(req: Request) {
         id: documentId,
         indexed: true,
         title: documentTitle,
+        userId: userId,
         documentData: {
           create: {
             data: text.join(" "),

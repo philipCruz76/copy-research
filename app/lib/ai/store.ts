@@ -9,6 +9,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { generateDocumentHash, generateRandomFileName } from "@/app/lib/utils";
 import db from "@/app/lib/db";
 import { getDocumentFromCache, storeDocumentInCache } from "./documentCache";
+import { auth } from "../auth";
 
 export const getVectorStore = async () => {
   if (typeof window !== "undefined") {
@@ -31,7 +32,7 @@ export const loadDocumentsToDb = async (
 ) => {
   console.log("Loading documents to db...");
   const documentId = await generateRandomFileName();
-
+  const session = await auth();
   const documents = docs.map(
     (doc) =>
       new Document({
@@ -44,6 +45,7 @@ export const loadDocumentsToDb = async (
     data: {
       src: src,
       id: documentId,
+      userId: session?.user.id!,
       documentType: DocumentType.URL,
       title: docs[0].metadata.title,
       indexed: true,

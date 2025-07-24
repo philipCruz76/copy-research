@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { ChatInput } from "@/app/components/chat/ChatInput";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DefaultChatTransport } from "ai";
 import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { ChatLoadingPage } from "@/app/components/chat/ChatLoadingPage";
@@ -12,21 +12,21 @@ import { CitedResponse } from "@/app/lib/types/citations.types";
 import CitationSidebar from "@/app/components/chat/CitationSidebar";
 import DocumentChunkCitations from "@/app/components/chat/DocumentChunkCitations";
 import SearchResultCitations from "@/app/components/chat/SearchResultCtiations";
-import { ArrowDown } from "lucide-react";
+import { ChatLimitPage } from "../components/chat/ChatLimitPage";
 
 export default function ChatPage() {
   const { conversations, isLoadingConversations } = useConversationStore();
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [chatLimitReached, setChatLimitReached] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
   );
   const { isOpen } = useCitationsSidebarStore();
   const windowRef = useRef<Window | null>(null);
-  const [isLastMessageVisible, setIsLastMessageVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, stop, setMessages, id } = useChat({
+  const { messages, sendMessage, status, stop, id } = useChat({
     maxSteps: 3,
     transport: new DefaultChatTransport({
       api: "/api/chat",
@@ -57,22 +57,6 @@ export default function ChatPage() {
     const mainText = text.slice(0, text.lastIndexOf("[")).trim();
     return { mainText: mainText, chunkIds: ids };
   };
-  const checkLastMessageVisibility = () => {
-    if (!messagesEndRef.current || !messagesContainerRef.current) return;
-
-    const container = messagesContainerRef.current;
-    const lastMessage = messagesEndRef.current;
-
-    const containerRect = container.getBoundingClientRect();
-    const lastMessageRect = lastMessage.getBoundingClientRect();
-
-    // Check if the last message is fully visible within the container
-    const isVisible =
-      lastMessageRect.top >= containerRect.top &&
-      lastMessageRect.bottom <= containerRect.bottom;
-
-    setIsLastMessageVisible(isVisible);
-  };
 
   useEffect(() => {
     const scrollToBottom = () => {
@@ -82,30 +66,25 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    if (!isLoadingConversations) {
+    if (!isLoadingConversations && !initialLoadComplete) {
+      // Only check limit on initial page load
+      if (conversations.length >= 3) {
+        setChatLimitReached(true);
+      } else {
+        setConversationsLoaded(true);
+      }
+      setInitialLoadComplete(true);
+    } else if (!isLoadingConversations && initialLoadComplete) {
+      // On subsequent updates, just set conversations as loaded
+      // This allows conversation creation flow to proceed normally
       setConversationsLoaded(true);
     }
-  }, [conversations]);
+  }, [conversations, isLoadingConversations, initialLoadComplete]);
+
   useEffect(() => {
     windowRef.current = window;
   }, []);
 
-  useEffect(() => {
-    // Check visibility when messages change
-    checkLastMessageVisibility();
-  }, [windowRef.current]);
-
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      checkLastMessageVisibility();
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [checkLastMessageVisibility]);
   useEffect(() => {
     if (status === "streaming" && messages.length > 0) {
       // Get the ID of the most recent assistant message
@@ -123,7 +102,10 @@ export default function ChatPage() {
     }
   }, [status, messages]);
 
-  if (!conversationsLoaded) {
+  if (chatLimitReached) {
+    return <ChatLimitPage />;
+  }
+  if (!conversationsLoaded && !chatLimitReached) {
     return <ChatLoadingPage />;
   }
 
@@ -192,6 +174,9 @@ export default function ChatPage() {
                             }
                             let messageWithCitations: CitedResponse;
                             try {
+                              if (part.text === "") {
+                                return null;
+                              }
                               messageWithCitations = JSON.parse(part.text);
                             } catch (e) {
                               toast.error("Error parsing message content");

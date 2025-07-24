@@ -3,14 +3,14 @@ import { generateText, generateId, UIMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import db from "@/app/lib/db";
 import { Conversation } from "@prisma/client";
+import { auth } from "@/app/lib/auth";
 
 export async function POST(req: Request) {
   const { messages, id }: { messages: UIMessage[]; id: string } =
     await req.json();
 
   try {
-    {
-      /**   FUTURE IMPLEMENTATION
+    /**   FUTURE IMPLEMENTATION
        * // 1. Extract embeddings from messages
     const texts = messages.map((message: ChatMessage) => message.content);
     const textEmbeddings = await embeddings.embedQuery(texts.join("\n"));
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
    // const clusters = extractClusters(clustering, 0.4);
   */
-    }
+    const session = await auth();
     // const modelMessages = convertToModelMessages(messages);
     // 4. Summarize the overall topic
     const conversationText = messages
@@ -67,6 +67,7 @@ export async function POST(req: Request) {
         data: {
           id: generateId(),
           title: mainTopic,
+          userId: session?.user.id!,
         },
       });
     } else {
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
           data: {
             id,
             title: mainTopic,
+            userId: session?.user.id!,
           },
         });
       } else {

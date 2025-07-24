@@ -25,6 +25,7 @@ import {
   synthesizeQueryFrom,
 } from "@/app/lib/actions/search-actions";
 import { PageResult } from "@/app/lib/search/index";
+import { auth } from "@/app/lib/auth";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
@@ -43,6 +44,7 @@ export type StreamingToolCallResult = UIMessage<
 export async function POST(req: Request) {
   const { message, id }: { message: UIMessage; id: string } = await req.json();
   try {
+    const session = await auth();
     if (message.role !== "user") {
       return new Response("Invalid message role", {
         status: 400,
@@ -64,7 +66,7 @@ export async function POST(req: Request) {
 
     if (!conversation) {
       conversation = await db.conversation.create({
-        data: { id },
+        data: { id, userId: session?.user.id! },
       });
     }
 

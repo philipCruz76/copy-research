@@ -8,18 +8,8 @@ import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import { getConversations } from "@/app/lib/actions/conversation-actions";
 import { FullConversation } from "@/app/lib/types/gpt.types";
 import ConversationHistory from "@/app/components/navigation/ConversationHistory";
-import { signIn, signOut } from "next-auth/react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/app/lib/ui/dropdown-menu";
-import Image from "next/image";
+import { signIn } from "next-auth/react";
 import { Session } from "next-auth";
-import { ChevronDown } from "lucide-react";
 import UserContextMenu from "./UserContextMenu";
 
 interface SidebarProps {
@@ -131,7 +121,7 @@ export function Sidebar({ className, userSession }: SidebarProps) {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const conversations: FullConversation[] = await getConversations();
+        const conversations: FullConversation[] | [] = await getConversations();
         setConversations(conversations);
         setIsLoadingConversations(false);
       } catch (error) {
@@ -472,7 +462,10 @@ export function Sidebar({ className, userSession }: SidebarProps) {
             className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} p-3 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors group`}
           >
             {userSession ? (
-              <UserContextMenu userSession={userSession} isCollapsed={isCollapsed}/>
+              <UserContextMenu
+                userSession={userSession}
+                isCollapsed={isCollapsed}
+              />
             ) : (
               <button
                 onClick={() => signIn("google")}

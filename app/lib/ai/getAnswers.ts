@@ -9,6 +9,7 @@ import { getSignedURL } from "@/app/lib/storage";
 import db from "@/app/lib/db";
 import { getDocumentSummary } from "@/app/lib/ai/getDocumentSummary";
 import { getCitationsForChunks } from "@/app/lib/ai/store";
+import { auth } from "../auth";
 
 export async function indexFileDocument(
   document: File,
@@ -41,12 +42,14 @@ export async function indexFileDocument(
     },
   })
     .then(async (res) => {
+      const session = await auth();
       const resultURL = new URL(res.url);
       const objectLocation = resultURL.origin + resultURL.pathname;
 
       try {
         await db.document.create({
           data: {
+            userId: session?.user.id!,
             src: objectLocation,
             documentType: DocumentType.FILES,
             id: documentId,

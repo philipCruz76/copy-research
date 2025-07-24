@@ -48,13 +48,11 @@ export default function ChatPage() {
   const params = useParams();
   const windowRef = useRef<Window | null>(null);
 
-  const { conversations, isLoadingConversations, currentConversationId } =
+  const { conversations, isLoadingConversations, setCurrentConversationId } =
     useConversationStore();
-  const conversationId =
-    currentConversationId !== null
-      ? currentConversationId
-      : (params.conversationId as string);
-  const [, setInitialMessages] = useState<UIMessage[]>([]);
+
+  const conversationId = params.conversationId as string;
+
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
@@ -83,6 +81,13 @@ export default function ChatPage() {
       );
     },
   });
+
+  // Sync conversation store with URL params
+  useEffect(() => {
+    if (conversationId) {
+      setCurrentConversationId(conversationId);
+    }
+  }, [conversationId]);
 
   useEffect(() => {
     windowRef.current = window;
@@ -137,7 +142,8 @@ export default function ChatPage() {
                   "Formatted messages from server:",
                   formattedMessages,
                 );
-                setInitialMessages(formattedMessages);
+                // Fix: Use setMessages instead of setInitialMessages
+                setMessages(formattedMessages);
               }
             } catch (error) {
               console.error("Error loading messages from server:", error);
@@ -151,7 +157,7 @@ export default function ChatPage() {
         console.error("Error loading messages:", error);
       }
     }
-  }, [conversationId, conversations]);
+  }, [conversationId, conversations, setMessages]);
 
   const renderMessages = useMemo(() => {
     return messages.map((message) => (
@@ -209,6 +215,9 @@ export default function ChatPage() {
                   }
                   let messageWithCitations: CitedResponse;
                   try {
+                    if (part.text === "") {
+                      return null;
+                    }
                     messageWithCitations = JSON.parse(part.text);
                   } catch (e) {
                     toast.error("Error parsing message content");

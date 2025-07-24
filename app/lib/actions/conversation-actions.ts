@@ -2,16 +2,18 @@
 
 import db from "@/app/lib/db";
 import { FullConversation } from "@/app/lib/types/gpt.types";
+import { auth } from "../auth";
 
 /**
  * Creates a new conversation with it's initial message and redirects to its chat page
  */
 export async function createNewConversation(chatId: string) {
   try {
+    const session = await auth();
     // Create a new conversation in the database
     const conversation = await db.conversation.create({
       data: {
-        userId: null, // Can be updated later if user authentication is implemented
+        userId: session?.user.id!, // Can be updated later if user authentication is implemented
         id: chatId,
       },
     });
@@ -46,7 +48,12 @@ export async function deleteConversation(conversationId: string) {
  */
 export async function getConversations() {
   try {
+    const session = await auth();
+
     const conversations = await db.conversation.findMany({
+      where: {
+        userId: session?.user.id,
+      },
       orderBy: {
         updatedAt: "desc",
       },

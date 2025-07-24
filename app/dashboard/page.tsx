@@ -1,47 +1,35 @@
+"use client";
 import { BarChart, FileText, MessageSquare, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import RecentConversation from "@/app/components/dashboard/RecentConversation";
 import { FullConversation } from "@/app/lib/types/gpt.types";
-import { auth } from "@/app/lib/auth";
-import { redirect } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Document } from "@prisma/client";
 
-export default async function DashboardPage() {
-
-  const session = await auth();
-
-  if (!session) {
-    redirect("/");
-  }
-
-  const conversationsResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/conversations`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "default",
-      next: {
-        revalidate: 600, //10 minutes
-      },
+export default function DashboardPage() {
+  const { data: conversations, status } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/conversations`,
+      );
+      const data = (await response.json()) as FullConversation[];
+      return data;
     },
-  );
-  const conversations =
-    (await conversationsResponse.json()) as FullConversation[];
-  const documentsResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/documents`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "default",
-      next: {
-        revalidate: 600, //10 minutes
-      },
+    refetchInterval: 60 * 3 * 1000, // 3 minutes
+  });
+
+  const { data: documents, status: documentsStatus } = useQuery({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/documents`,
+      );
+      const data = (await response.json()) as Document[];
+      return data;
     },
-  );
-  const documents = await documentsResponse.json();
+    refetchInterval: 60 * 3 * 1000, // 3 minutes
+  });
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 text-black dark:text-white p-6">
@@ -64,9 +52,9 @@ export default async function DashboardPage() {
             <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold">{documents.length}</span>
+            <span className="text-3xl font-bold">{documents?.length || 0}</span>
             <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-              {documents.length > 1 ? "documents" : "document"}
+              {documents?.length || 0 > 1 ? "documents" : "document"}
             </span>
           </div>
           <div className="flex items-end justify-end mt-2">
@@ -90,9 +78,11 @@ export default async function DashboardPage() {
             <MessageSquare className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold">{conversations.length}</span>
+            <span className="text-3xl font-bold">
+              {conversations?.length || 0}
+            </span>
             <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-              {conversations.length > 1 ? "chats" : "chat"}
+              {conversations?.length || 0 > 1 ? "chats" : "chat"}
             </span>
           </div>
         </div>
@@ -121,8 +111,8 @@ export default async function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-3 pl-3">
-          {conversations.length > 0 ? (
-            conversations.slice(0, 3).map((conversation, index) => (
+          {conversations?.length || 0 > 0 ? (
+            conversations?.slice(0, 3).map((conversation, index) => (
               <div key={conversation.id}>
                 <RecentConversation conversation={conversation} />
               </div>

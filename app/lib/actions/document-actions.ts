@@ -4,6 +4,7 @@ import { indexUrlDocument, loadUrlDocument } from "@/app/lib/ai/getAnswers";
 import db from "@/app/lib/db";
 import { generateRandomFileName, generateChecksum } from "@/app/lib/utils";
 import { downloadDocument } from "@/app/lib/storage";
+import { auth } from "../auth";
 
 export async function processUrl(url: string) {
   try {
@@ -18,12 +19,16 @@ export async function processUrl(url: string) {
   }
 }
 
-export async function checkForDocumentLimit(): Promise<{
+export async function checkForDocumentLimit(userId: string): Promise<{
   success: boolean;
   message: string;
 }> {
-  const docs = await db.document.findMany();
-  if (docs.length >= 10) {
+  const docs = await db.document.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+  if (docs.length >= 5) {
     return { success: false, message: "Document limit reached" };
   }
   return { success: true, message: "Document limit not reached" };
@@ -33,6 +38,7 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
   const checksum = await generateChecksum(file);
   const documentId = await generateRandomFileName();
 
+  const session = await auth();
   console.log(documentId, file.type, file.size, checksum);
   try {
     // Get the signed URL from our API route
@@ -109,6 +115,7 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
         documentURL: objectLocation,
         checksum,
         documentTitle,
+        userId: session?.user.id!,
       }),
     });
 

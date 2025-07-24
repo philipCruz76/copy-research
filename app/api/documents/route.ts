@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import db from "@/app/lib/db";
+import { auth } from "@/app/lib/auth";
 
 export async function GET() {
   try {
+    const session = await auth();
     const documents = await db.document.findMany({
+      where: {
+        userId: session?.user.id,
+      },
       include: {
         documentData: true,
       },

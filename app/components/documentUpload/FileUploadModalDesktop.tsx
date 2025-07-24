@@ -17,6 +17,7 @@ import {
   FileUploadValidator,
 } from "@/app/lib/types/documentUpload.types";
 import { cn } from "@/app/lib/utils";
+import { auth } from "@/app/lib/auth";
 
 const acceptedTypes = [
   "text/plain",
@@ -46,10 +47,11 @@ const FileUploadModalDesktop = () => {
   ) => {
     try {
       setIsLoading(true);
+      const session = await auth();
       const result = await handleFileUpload(data.file, data.title);
       if (result.success) {
         toast.success(result.message);
-        const response = await checkForDocumentLimit();
+        const response = await checkForDocumentLimit(session?.user.id!);
         if (!response.success) {
           setDocumentLimit(true);
           setDocumentLimitMessage(response.message);

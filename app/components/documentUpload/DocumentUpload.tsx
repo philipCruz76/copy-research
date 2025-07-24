@@ -10,6 +10,7 @@ import {
 } from "@/app/lib/actions/document-actions";
 import { useFileUploadModal } from "@/app/lib/stores/file-upload";
 import { useMediaQuery } from "react-responsive";
+import { auth } from "@/app/lib/auth";
 
 const FileUploadModalMobile = lazy(
   () => import("@/app/components/documentUpload/FileUploadModalMobile"),
@@ -84,7 +85,8 @@ export default function DocumentUpload({
   };
 
   const checkLimit = useCallback(async (): Promise<boolean> => {
-    const response = await checkForDocumentLimit();
+    const session = await auth();
+    const response = await checkForDocumentLimit(session?.user.id!);
     if (!response.success) {
       setDocumentLimit(true);
       setDocumentLimitMessage(response.message);
@@ -173,7 +175,7 @@ export default function DocumentUpload({
                   setIsUrlValid(isValid);
 
                   // Always set the raw input value to allow editing
-                  setUrl(inputValue);
+                  setUrl(sanitizedUrl);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {

@@ -1,3 +1,4 @@
-import { auth as middleware } from "@/app/lib/auth";
+import NextAuth from "next-auth";
+import authConfig from "@/app/lib/auth.config";
 
-export default middleware;
+export const { auth: middleware } = NextAuth(authConfig);
