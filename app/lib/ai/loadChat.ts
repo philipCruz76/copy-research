@@ -6,10 +6,16 @@ import { auth } from "../auth";
 export async function loadChat(id: string) {
   try {
     const session = await auth();
+
+    // Guard clause: if user is not authenticated, throw error
+    if (!session?.user?.id) {
+      throw new Error("User not authenticated");
+    }
+
     const conversation = await db.conversation.findUnique({
       where: {
         id,
-        userId: session?.user.id!,
+        userId: session.user.id, // Now we know this is defined
       },
       include: {
         messages: true,

@@ -7,6 +7,11 @@ import { Textarea } from "@/app/lib/ui/Textarea";
 import { cn } from "@/app/lib/utils";
 import { toast } from "sonner";
 import { useTopicDetection } from "@/app/lib/hooks/useTopicDetection";
+import { auth } from "@/app/lib/auth";
+import ChatSignUpModalDesktop from "@/app/components/chat/ChatSignUpModalDesktop";
+import { getServerSession } from "@/app/lib/actions/getServerSession";
+import { useMediaQuery } from "react-responsive";
+import ChatSignUpModalMobile from "./ChatSignUpModalMobile";
 
 interface ChatInputProps {
   chatId?: string;
@@ -34,7 +39,8 @@ function PureChatInput({
   const MAX_CHARS = 4000; // Set a reasonable character limit
   const { topic, detectTopic, isLoading: isTopicLoading } = useTopicDetection();
   const [isProcessingTopic, setIsProcessingTopic] = useState(false);
-
+  const [modalOpen, setModalOpen] = useState(false);
+  const isDesktopOrLaptop = useMediaQuery({ minWidth: 900 });
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -59,7 +65,12 @@ function PureChatInput({
 
   const submitForm = useCallback(async () => {
     if (text.trim() === "") return; // Prevent empty submissions
-
+    const session = await getServerSession();
+    console.log(session);
+    if (!session) {
+      setModalOpen(true);
+      return;
+    }
     // Store the current input before clearing it
     const currentInput = text;
 
@@ -283,6 +294,18 @@ function PureChatInput({
           facts.
         </p>
       </div>
+      {isDesktopOrLaptop && (
+        <ChatSignUpModalDesktop
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+      {!isDesktopOrLaptop && (
+        <ChatSignUpModalMobile
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

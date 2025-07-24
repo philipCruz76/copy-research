@@ -12,7 +12,6 @@ import { useConversationStore } from "@/app/lib/stores/conversation-store";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
@@ -27,7 +26,6 @@ interface ConversationHistoryProps {
 export default function ConversationHistory({
   isCollapsed = false,
 }: ConversationHistoryProps) {
-  const router = useRouter();
   const { conversations } = useConversationStore();
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;

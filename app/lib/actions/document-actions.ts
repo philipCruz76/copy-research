@@ -136,20 +136,3 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
     };
   }
 };
-
-export async function getDocuments() {
-  try {
-    const documents = await db.document.findMany({
-      include: {
-        documentData: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-    return documents;
-  } catch (error) {
-    console.error("Error fetching documents:", error);
-    throw new Error("Failed to fetch documents");
-  }
-}

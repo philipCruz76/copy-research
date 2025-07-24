@@ -6,7 +6,6 @@ import db from "@/app/lib/db";
 import { DocumentChunk, DocumentType } from "@prisma/client";
 import { generateDocumentHash } from "@/app/lib/utils";
 import { getDocumentSummary } from "@/app/lib/ai/getDocumentSummary";
-import { auth } from "@/app/lib/auth";
 
 type DocumentRequest = {
   text: string[];

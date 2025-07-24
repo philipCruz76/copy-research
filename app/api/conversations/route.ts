@@ -6,9 +6,14 @@ export async function GET() {
   try {
     const session = await auth();
 
+    // Guard clause: if user is not authenticated, return empty array
+    if (!session?.user?.id) {
+      return NextResponse.json([]);
+    }
+
     const conversations = await db.conversation.findMany({
       where: {
-        userId: session?.user.id,
+        userId: session.user.id,
       },
       orderBy: {
         updatedAt: "desc",

@@ -50,9 +50,15 @@ export async function getConversations() {
   try {
     const session = await auth();
 
+    // Guard clause: if user is not authenticated, return empty array
+    if (!session?.user?.id) {
+      console.log("No authenticated user, returning empty conversations");
+      return [];
+    }
+
     const conversations = await db.conversation.findMany({
       where: {
-        userId: session?.user.id,
+        userId: session.user.id, // Now we know this is defined
       },
       orderBy: {
         updatedAt: "desc",
@@ -62,6 +68,8 @@ export async function getConversations() {
       },
     });
 
+    console.log(session.user.id);
+    console.log(conversations);
     return conversations as FullConversation[];
   } catch (error) {
     console.error("Error fetching conversations:", error);
