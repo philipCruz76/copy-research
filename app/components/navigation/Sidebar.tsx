@@ -173,7 +173,7 @@ export function Sidebar({ className, userSession }: SidebarProps) {
   return (
     <>
       {/* Mobile Menu Button - only visible on mobile */}
-      <div className="fixed top-4 right-4 z-20 tablet:hidden">
+      <div className="fixed top-4 left-4 z-20 tablet:hidden">
         <motion.button
           className="flex items-center justify-center w-10 h-10 rounded-md bg-white dark:bg-zinc-800 shadow-md border border-gray-200 dark:border-zinc-700"
           onClick={toggleMobileMenu}
@@ -284,6 +284,11 @@ export function Sidebar({ className, userSession }: SidebarProps) {
                 isCollapsed={false}
                 index={1}
               />
+              {conversations.length > 0 ? (
+                <div className="text-sm text-black font-semibold dark:text-white px-3 pt-2">
+                  <ConversationHistory isCollapsed={false} />
+                </div>
+              ) : null}
 
               <NavItem
                 href="/documents"
@@ -309,21 +314,33 @@ export function Sidebar({ className, userSession }: SidebarProps) {
                 index={4}
               />
 
-              <NavItem
-                href="/appearance"
-                icon="/icons/canvas.svg"
-                text="Appearance"
-                isCollapsed={false}
-                index={5}
-              />
-
-              <NavItem
-                href="/settings"
-                icon="/icons/settings.svg"
-                text="Settings"
-                isCollapsed={false}
-                index={6}
-              />
+              {/* Auth for Mobile */}
+              <div className="flex items-start justify-between p-3 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors group">
+                {userSession ? (
+                  <UserContextMenu
+                    userSession={userSession}
+                    isCollapsed={false}
+                  />
+                ) : (
+                  <button
+                    onClick={() => signIn("google")}
+                    className="cursor-pointer flex justify-start flex-row group items-center gap-2 w-full"
+                  >
+                    <div className="flex items-center justify-center w-[32px] h-[32px] bg-gray-200 dark:bg-zinc-800 rounded-full group-hover:bg-indigo-500 transition-colors">
+                      <SvgIcon
+                        src="/icons/user-icon.svg"
+                        alt="Sign In"
+                        width={16}
+                        height={16}
+                        className="w-[24px] h-[24px] rounded-full group-hover:opacity-80 text-black dark:text-white group-hover:text-white group-hover:border-white border border-black dark:border-white transition-colors duration-200 ease-in-out"
+                      />
+                    </div>
+                    <span className="ml-1 text-sm font-medium text-black group-hover:text-indigo-400 dark:text-white transition-colors duration-100">
+                      Sign In
+                    </span>
+                  </button>
+                )}
+              </div>
             </nav>
 
             {/* Footer Links for Mobile */}

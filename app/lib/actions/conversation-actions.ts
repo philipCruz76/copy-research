@@ -2,7 +2,7 @@
 
 import db from "@/app/lib/db";
 import { FullConversation } from "@/app/lib/types/gpt.types";
-import { auth } from "../auth";
+import { auth } from "@/app/lib/auth";
 
 /**
  * Creates a new conversation with it's initial message and redirects to its chat page
@@ -67,9 +67,6 @@ export async function getConversations() {
         messages: true,
       },
     });
-
-    console.log(session.user.id);
-    console.log(conversations);
     return conversations as FullConversation[];
   } catch (error) {
     console.error("Error fetching conversations:", error);

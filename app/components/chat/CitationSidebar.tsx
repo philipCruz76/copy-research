@@ -108,7 +108,7 @@ const CitationSidebar = () => {
       <DrawerPortal>
         <DrawerOverlay className="fixed inset-0 bg-black/40" />
         <DrawerTitle>Citations</DrawerTitle>
-        <DrawerContent className="w-full md:w-[600px] h-full flex flex-col right-0 overflow-clip">
+        <DrawerContent className="w-full tablet:w-[600px] h-full flex flex-col right-0 overflow-x-scroll">
           <div className="flex flex-col h-full bg-white dark:bg-zinc-900">
             {/* Header */}
             <motion.div
@@ -131,7 +131,7 @@ const CitationSidebar = () => {
                 >
                   <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 </motion.div>
-                <div>
+                <div className="max-w-[300px]">
                   <motion.h2
                     className="text-xl font-bold"
                     initial={{ opacity: 0, x: -10 }}
@@ -144,7 +144,7 @@ const CitationSidebar = () => {
                   </motion.h2>
                   {citedDocument?.src && (
                     <motion.p
-                      className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-ellipsis overflow-hidden"
+                      className="text-sm text-gray-500 dark:text-gray-400 mt-1  truncate"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2, duration: 0.3 }}

@@ -1,4 +1,3 @@
-import { ChatMessage } from "@/app/lib/types/gpt.types";
 import { embeddings } from "@/app/lib/ai/gpt";
 import similarity from "compute-cosine-similarity";
 import { UIMessage } from "ai";
@@ -108,7 +107,13 @@ export async function isFollowUpQuery(
     }
   }
 
-  // 5) Check for common follow-up question patterns
+  // 5) Short query bonus - queries with 3 words or less are more likely to be follow-ups
+  if (wordCount <= 3) {
+    evidence += 0.4;
+    reason = reason || "Short query (3 words or less)";
+  }
+
+  // 6) Check for common follow-up question patterns
   if (evidence < 0.8) {
     // Questions starting with "any" are often follow-ups
     if (text.startsWith("any ")) {
@@ -140,7 +145,7 @@ export async function isFollowUpQuery(
     }
   }
 
-  // 6) Embedding similarity analysis
+  // 7) Embedding similarity analysis
   if (recentMessages.length > 0) {
     try {
       // Get query embedding

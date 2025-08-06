@@ -44,7 +44,7 @@ export default async function RootLayout({
           <ThemeProvider>
             <div className="flex h-screen">
               <Sidebar userSession={session} />
-              <main className="flex-1 overflow-auto bg-white dark:bg-zinc-900">
+              <main className="flex-1 overflow-auto bg-white tablet:pt-0 pt-[48px] dark:bg-zinc-900">
                 {children}
               </main>
             </div>

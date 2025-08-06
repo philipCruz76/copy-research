@@ -34,6 +34,17 @@ export async function checkForDocumentLimit(userId: string): Promise<{
   return { success: true, message: "Document limit not reached" };
 }
 
+export async function checkCurrentUserDocumentLimit(): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "User not authenticated" };
+  }
+  return checkForDocumentLimit(session.user.id);
+}
+
 export const handleFileUpload = async (file: File, documentTitle: string) => {
   const checksum = await generateChecksum(file);
   const documentId = await generateRandomFileName();
@@ -126,7 +137,11 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
       };
     }
 
-    return { success: true, message: "Document uploaded successfully" };
+    return {
+      success: true,
+      message: "Document uploaded successfully",
+      userId: session?.user.id,
+    };
   } catch (error) {
     console.error("Error in file upload process:", error);
     return {

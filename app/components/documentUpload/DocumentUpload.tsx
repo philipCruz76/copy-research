@@ -5,12 +5,11 @@ import { cn, isValidURL } from "@/app/lib/utils";
 import { toast } from "sonner";
 import { lazy, useCallback, useState } from "react";
 import {
-  checkForDocumentLimit,
+  checkCurrentUserDocumentLimit,
   processUrl,
 } from "@/app/lib/actions/document-actions";
 import { useFileUploadModal } from "@/app/lib/stores/file-upload";
 import { useMediaQuery } from "react-responsive";
-import { auth } from "@/app/lib/auth";
 
 const FileUploadModalMobile = lazy(
   () => import("@/app/components/documentUpload/FileUploadModalMobile"),
@@ -85,8 +84,7 @@ export default function DocumentUpload({
   };
 
   const checkLimit = useCallback(async (): Promise<boolean> => {
-    const session = await auth();
-    const response = await checkForDocumentLimit(session?.user.id!);
+    const response = await checkCurrentUserDocumentLimit();
     if (!response.success) {
       setDocumentLimit(true);
       setDocumentLimitMessage(response.message);
