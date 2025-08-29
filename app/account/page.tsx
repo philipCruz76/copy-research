@@ -4,8 +4,6 @@ import { redirect } from "next/navigation";
 import { auth } from "../lib/auth";
 import Image from "next/image";
 import AppearanceSettings from "../components/AppearanceSettings";
-import { Conversation } from "@prisma/client";
-import ConversationHistory from "../components/navigation/ConversationHistory";
 import { ConversationLimitsCard } from "../components/account/ConversationLimitsCard";
 import { DocumentLimitsCard } from "../components/account/DocumentLimitsCard";
 

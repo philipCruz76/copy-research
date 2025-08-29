@@ -28,55 +28,33 @@ export async function POST(req: Request) {
       userId,
     } = (await req.json()) as DocumentRequest;
 
-    const documentSummary = await getDocumentSummary(text.join(" "));
+    const summaryPromise = getDocumentSummary(text.join(" "));
     let uniqueIds: string[] = [];
     const chunkCreations: Promise<DocumentChunk>[] = [];
-    const documents: Document[] = text.map((doc: string) => {
+
+    const tempDocuments: Document[] = text.map((doc: string) => {
       return new Document({
         pageContent: doc,
-        metadata: {
-          documentId,
-          type: fileType,
-          summary: documentSummary.summary,
-          keyTopics: documentSummary.keyTopics,
-        },
+        metadata: { documentId, type: fileType },
       });
     });
 
-    console.log("Documents: ", documents.length);
-    // Add text splitter similar to loadDocumentsToDb
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 100,
     });
 
-    const splitDocs = await splitter.splitDocuments(documents);
+    const [documentSummary, splitDocs] = await Promise.all([
+      summaryPromise,
+      splitter.splitDocuments(tempDocuments),
+    ]);
 
-    // Create the parent document first
-    const dbDocument = await db.document.create({
-      data: {
-        src: documentURL,
-        documentType: DocumentType.FILES,
-        id: documentId,
-        indexed: true,
-        title: documentTitle,
-        userId: userId,
-        documentData: {
-          create: {
-            data: text.join(" "),
-            displayName: "Document Text",
-            size: text.length,
-            indexed: true,
-            summary: documentSummary.summary,
-            keyTopics: documentSummary.keyTopics,
-          },
-        },
-      },
+    splitDocs.forEach((doc, i) => {
+      doc.metadata.summary = documentSummary.summary;
+      doc.metadata.keyTopics = documentSummary.keyTopics;
     });
 
-    if (!dbDocument) {
-      throw new Error("Document not created in db");
-    }
+    const vectorStore = await getVectorDb();
 
     // Process each document chunk and track character positions
     splitDocs.reduce((currentPosition, doc, i) => {
@@ -122,14 +100,41 @@ export async function POST(req: Request) {
       return endChar;
     }, 0); // Start at position 0
 
-    // Create all chunks in parallel
-    await Promise.all(chunkCreations);
-
-    const vectorStore = await getVectorDb();
-    await vectorStore.addDocuments(splitDocs, {
-      ids: uniqueIds,
+    // First, create the document in the database
+    const dbDocument = await db.document.create({
+      data: {
+        src: documentURL,
+        documentType: DocumentType.FILES,
+        id: documentId,
+        indexed: true,
+        title: documentTitle,
+        userId: userId,
+        documentData: {
+          create: {
+            data: text.join(" "),
+            displayName: "Document Text",
+            size: text.length,
+            indexed: true,
+            summary: documentSummary.summary,
+            keyTopics: documentSummary.keyTopics,
+          },
+        },
+      },
     });
-    console.log("Documents added to Pinecone");
+
+    // Then, create the chunks and add to vector store in parallel
+    const [vectorStoreResponse, chunkResult] = await Promise.all([
+      // add documents to vector store
+      vectorStore.addDocuments(splitDocs, {
+        ids: uniqueIds,
+      }),
+      // create chunks in db (now that document exists)
+      Promise.all(chunkCreations),
+    ]);
+
+    if (!dbDocument) {
+      throw new Error("Document not created in db");
+    }
 
     await db.documentHashes.create({
       data: {
@@ -143,10 +148,10 @@ export async function POST(req: Request) {
       message: "Documents uploaded to Pinecone and saved to Database",
     });
   } catch (error) {
-    console.error("Error uploading documents to Pinecone:", error);
+    console.error("Error uploading documents to", error);
     return NextResponse.json({
       success: false,
-      message: "Error uploading documents to Pinecone",
+      message: "Error uploading documents",
     });
   }
 }
