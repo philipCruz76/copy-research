@@ -65,7 +65,10 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
 
     const response = await fetch(`${baseUrl}/api/fileUpload`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-vercel-protection-bypass": `${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}`,
+      },
       body: JSON.stringify({
         documentId,
         fileType: file.type,
@@ -75,25 +78,11 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error Response:", errorText);
-      return {
-        success: false,
-        message: `API Error: ${response.status} - ${errorText}`,
-      };
+      const data = await response.json();
+      return { success: false, message: data.message };
     }
 
-    const responseText = await response.text();
-    console.log("Response:", responseText);
-
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("JSON Parse Error:", parseError);
-      console.error("Response was:", responseText);
-      return { success: false, message: "Invalid API response format" };
-    }
+    const data = await response.json();
     console.log("API Response:", data);
 
     if (
