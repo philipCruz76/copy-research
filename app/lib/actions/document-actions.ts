@@ -75,11 +75,25 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
     });
 
     if (!response.ok) {
-      const data = await response.json();
-      return { success: false, message: data.message };
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      return {
+        success: false,
+        message: `API Error: ${response.status} - ${errorText}`,
+      };
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log("Response:", responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.error("Response was:", responseText);
+      return { success: false, message: "Invalid API response format" };
+    }
     console.log("API Response:", data);
 
     if (
