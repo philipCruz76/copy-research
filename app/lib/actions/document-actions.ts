@@ -108,7 +108,9 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
       // Upload the file to Pinecone
       fetch(`${baseUrl}/api/pinecone-upload`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          "x-vercel-protection-bypass": `${process.env.VERCEL_AUTOMATION_BYPASS_SECRET}`,
+         },
         body: JSON.stringify({
           text,
           documentId,
@@ -131,7 +133,7 @@ export const handleFileUpload = async (file: File, documentTitle: string) => {
     if (!pineconeResponse.ok) {
       return {
         success: false,
-        message: "Failed to upload documents to Pinecone",
+        message: `Failed to upload documents to Pinecone ${pineconeResponse.status} ${pineconeResponse.statusText}`,
       };
     }
     const resultURL = new URL(uploadResponse.url);
